@@ -248,9 +248,8 @@ namespace e.Motion_Katarina{
             int wardID = GetWardItem();
             if (wardID != -1)
             {
-                Items.Item ward = new Items.Item(wardID,600);
                 WardJumpReady = true;
-                ward.Cast(MaxPosition(Player.Position.To2D(), Game.CursorPos.To2D(), 600));
+                PutWard(MaxPosition(Player.Position.To2D(), Game.CursorPos.To2D(), 600),(ItemId) wardID);
             }
 
         }
@@ -308,7 +307,7 @@ namespace e.Motion_Katarina{
             {
                 return pos;
             }
-            return new Vector2();
+            return (pos - init).Normalized();
         }
         #endregion
     }
