@@ -307,7 +307,7 @@ namespace e.Motion_Katarina{
             {
                 return pos;
             }
-            return (pos - init).Normalized();
+            return distance*(pos - init).Normalized()+init;
         }
         #endregion
     }
