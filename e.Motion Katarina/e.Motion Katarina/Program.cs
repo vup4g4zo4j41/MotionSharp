@@ -5,251 +5,208 @@ using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
-using Color = System.Drawing.Color;
 using SharpDX;
-using SharpDX.Win32;
 
+namespace NoobJax
+{
+    class Program
+    {
+        public const string ChampionName = "Jax";
+        public static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
+        public static Orbwalking.Orbwalker Orbwalker;
+        //Menu
+        public static Menu Menu;
+        //Spells
+        public static List<Spell> SpellList = new List<Spell>();
+        public static Spell Q;
+        public static Spell W;
+        public static Spell E;
+        public static Spell R;
 
-namespace e.Motion_Katarina{
-    class Program {
+        private static Items.Item tiamat;
+        private static Items.Item hydra;
+        private static Items.Item cutlass;
+        private static Items.Item botrk;
+        private static Items.Item hextech;
+        private static Obj_AI_Base target;
 
-        #region Declaration
-        static Spell Q, W, E, R;
-        static Orbwalking.Orbwalker _orbwalker;
-        static Menu _Menu;
-        static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
-        static Obj_AI_Hero qTarget = null;
-        #endregion
-
-
-
-        static void Game_OnGameLoad(EventArgs args) {
-            //Wird aufgerufen, wenn LeagueSharp Injected
-            if (Player.ChampionName != "Katarina")
-            {
-                return;
-            }
-            #region Spells
-            Q = new Spell(SpellSlot.Q, 675);
-            W = new Spell(SpellSlot.W, 375);
-            E = new Spell(SpellSlot.E, 700);
-            R = new Spell(SpellSlot.R, 550);
-            #endregion
-
-            Utility.HpBarDamageIndicator.Enabled = true;
-            Utility.HpBarDamageIndicator.DamageToUnit = CalculateDamage;
-
-            
-            #region Menu
-            _Menu = new Menu("e.Motion Katarina", "motion.katarina", true);
-
-            //Orbwalker-Menü
-            Menu orbwalkerMenu = new Menu("Orbwalker", "motion.katarina.orbwalker");
-            _orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
-            _Menu.AddSubMenu(orbwalkerMenu);
-
-            //TargetSelector-Menü
-            TargetSelector.AddToMenu(_Menu);
-
-            //Combo-Menü
-            Menu comboMenu = new Menu("Combo", "motion.katarina.Combo");
-            {
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.useq", "Use Q").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usew", "Use W").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usee", "Use E").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.user", "Use R").SetValue(true));
-            }
-            _Menu.AddSubMenu(comboMenu);
-
-            //Harrass-Menü
-            Menu harrassMenu = new Menu("Harrass", "motion.katarina.harrass");
-            {
-                harrassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
-                harrassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
-                harrassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass"));
-                harrassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
-            }
-            _Menu.AddSubMenu(harrassMenu);
-
-            //KS-Menü
-            Menu ksMenu = new Menu("KillSteal", "motion.katarina.killsteal");
-            {
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.q", "Use Q"));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.w", "Use W"));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.e", "Use E"));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump"));
-            }
-            _Menu.AddSubMenu(ksMenu);
-
-            //Misc-Menü
-            Menu miscMenu = new Menu("Miscellanious","motion.katarina.misc");
-            {
-                miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
-                miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
-            }
-            _Menu.AddSubMenu(miscMenu);
-
-            //alles zum Hauptmenü hinzufügen
-            _Menu.AddToMainMenu();
-
-            #endregion
-            Game.PrintChat("<font color='#bb0000'>e</font><font color='#0000cc'>Motion</font> Katarina loaded");
-
-            #region Subscriptions
-            Drawing.OnDraw += Drawing_OnDraw;
-            Game.OnUpdate += OnUpdate;
-            
-            Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
-
-            #endregion
-        }
-
-
-
-        private static void OnUpdate(EventArgs args) {
-            if (Player.IsDead)
-            {
-                return;
-            }
-            if (HasRBuff())
-            {
-                _orbwalker.SetAttack(false);
-                _orbwalker.SetMovement(false);
-            }
-            
-            else
-            {
-                _orbwalker.SetAttack(true);
-                _orbwalker.SetMovement(true);
-            }
-
-            //Demark, important for W Usage
-            if (qTarget != null && (qTarget.HasBuff("katarinaqmark") || Q.Cooldown < 3))
-            {
-                qTarget = null;
-            }
-
-            if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
-            {
-                //Combo
-                Combo();
-            }
-
-            if (_Menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _Menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
-            {
-                WardJump();
-            }
-        }
-
-
-
-        static void Drawing_OnDraw(EventArgs args) {
-        }
-
-
-
-        static bool HasRBuff()
+        private static bool IsEUsed
         {
-            return (Player.HasBuff("KatarinaR") || Player.IsChannelingImportantSpell() || Player.HasBuff("katarinarsound"));
+            get { return Player.HasBuff("JaxCounterStrike"); }
         }
-
-
-
-        static void Main(string[] args) {
+        private static bool IsWUsed
+        {
+            get { return Player.HasBuff("JaxEmpowerTwo"); }
+        }
+        private static void Main(string[] args)
+        {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
-        
-
-
-        static void Combo()
+        private static void Game_OnGameLoad(EventArgs args)
         {
-            if (HasRBuff())
+            if (Player.ChampionName != "Jax") return;
+
+            Q = new Spell(SpellSlot.Q, 680);
+            W = new Spell(SpellSlot.W);
+            E = new Spell(SpellSlot.E);
+            R = new Spell(SpellSlot.R);
+
+
+            Menu = new Menu(Player.ChampionName, Player.ChampionName, true);
+            Menu orbwalkerMenu = Menu.AddSubMenu(new Menu("Orbwalker", "Orbwalker"));
+            Orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
+
+            Menu spellMenu = Menu.AddSubMenu(new Menu("Combo", "Combo"));
+            spellMenu.AddItem(new MenuItem("useQ", "Use Q").SetValue(true));
+            spellMenu.AddItem(new MenuItem("useW", "Use W").SetValue(true));
+            spellMenu.AddItem(new MenuItem("useE", "Use E").SetValue(true));
+            spellMenu.AddItem(new MenuItem("useR", "Use R").SetValue(true));
+
+            var lc = new Menu("Laneclear", "Laneclear");
+            Menu.AddSubMenu(lc);
+            lc.AddItem(new MenuItem("laneclearQ", "Use Q to LaneClear").SetValue(true));
+            lc.AddItem(new MenuItem("laneclearW", "Use W to LaneClear").SetValue(true));
+
+            var harass = new Menu("Harass", "Harass");
+            Menu.AddSubMenu(harass);
+            harass.AddItem(new MenuItem("harassW", "Use W to Cancel AA to Harass").SetValue(true));
+
+            var miscMenu = new Menu("Misc", "Misc");
+            Menu.AddSubMenu(miscMenu);
+            miscMenu.AddItem(new MenuItem("usejump", "Use Wardjump").SetValue(true));
+            miscMenu.AddItem(new MenuItem("jumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press))); //Standardkey für Wardjump
+
+            hydra = new Items.Item(3074, 185);
+            tiamat = new Items.Item(3077, 185);
+            cutlass = new Items.Item(3144, 450);
+            botrk = new Items.Item(3153, 450);
+            hextech = new Items.Item(3146, 700);
+            Menu.AddToMainMenu();
+
+            Game.OnUpdate += OnUpdate;
+            Orbwalking.OnAttack += OnAa;
+            Orbwalking.AfterAttack += AfterAa;
+            Game.PrintChat("NoobJax by 1Shinigamix321312312");
+        }
+        private static void OnUpdate(EventArgs args)
+        {
+            var m = TargetSelector.GetTarget(700, TargetSelector.DamageType.Physical);
+            if (m.Health < Q.GetDamage(m))
+            {
+                Q.Cast(m);
+            }
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                if (Player.Distance(m) <= botrk.Range)
+                {
+                    botrk.Cast(m);
+                }
+                if (Player.Distance(m) <= cutlass.Range)
+                {
+                    cutlass.Cast(m);
+                }
+                if (Player.Distance(m) <= hextech.Range)
+                {
+                    hextech.Cast(m);
+                }
+                if (Menu.Item("useQ").GetValue<bool>())
+                    if (Player.Distance(m.Position) > 125)
+                        Q.CastOnBestTarget();
+
+                if (Menu.Item("useR").GetValue<bool>())
+                    R.Cast(m);
+                if (hydra.IsOwned() && Player.Distance(m) < hydra.Range && hydra.IsReady() && !W.IsReady() && !IsWUsed)
+                    hydra.Cast();
+                if (tiamat.IsOwned() && Player.Distance(m) < tiamat.Range && tiamat.IsReady() && !W.IsReady() && !IsWUsed)
+                    tiamat.Cast();
+            }
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
+            {
+                var minion = MinionManager.GetMinions(Player.Position, 225).FirstOrDefault();
+                if (hydra.IsOwned() && Player.Distance(minion) < hydra.Range && hydra.IsReady() && !W.IsReady())
+                    hydra.Cast(minion);
+                if (tiamat.IsOwned() && Player.Distance(minion) < tiamat.Range && tiamat.IsReady() && !W.IsReady())
+                    tiamat.Cast(minion);
+            }
+        }
+        private static void OnAa(AttackableUnit unit, AttackableUnit target)
+        {
+            Obj_AI_Hero y = TargetSelector.GetTarget(700, TargetSelector.DamageType.Physical);
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            {
+                if (E.IsReady())
+                {
+                    if (E.IsReady() && Q.IsReady() && y.IsValidTarget(Q.Range))
+                    {
+                        E.Cast();
+                    }
+                    if (IsEUsed && y.IsValidTarget(Orbwalking.GetRealAutoAttackRange(null) + 65))
+                    {
+                        E.Cast();
+                    }
+                }
+            }
+            if (Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Mixed)
+            {
                 return;
-            bool useq = _Menu.Item("motion.katarina.Combo.useq").GetValue<bool>();
-            bool usew = _Menu.Item("motion.katarina.Combo.usew").GetValue<bool>();
-            bool usee = _Menu.Item("motion.katarina.Combo.usee").GetValue<bool>();
-            bool user = _Menu.Item("motion.katarina.Combo.user").GetValue<bool>();
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if(target != null && !target.IsZombie)
-            {
-                if(useq && Q.IsReady() && target.IsValidTarget(Q.Range))
-                {
-                    Q.Cast(target);
-                    qTarget = target;
-                }
-                if (usew && W.IsReady() && target.IsValidTarget(W.Range - 10) && CanCastW(target))
-                {
-                    W.Cast(target);
-                }
-                if (user && R.IsReady() && target.IsValidTarget(375))
-                {
-                    R.Cast();
-                    _orbwalker.SetAttack(false);
-                    _orbwalker.SetMovement(false);
-                }
-                if (usee && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !target.IsValidTarget(375)))
-                {
-                    E.Cast(target);
-                }
-                
             }
-            
+            if (hydra.IsOwned() && Player.Distance(target) < hydra.Range && hydra.IsReady() && !W.IsReady()) hydra.Cast();
+            if (tiamat.IsOwned() && Player.Distance(target) < tiamat.Range && tiamat.IsReady() && !W.IsReady()) tiamat.Cast();
         }
-
-
-        public static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        private static void AfterAa(AttackableUnit unit, AttackableUnit target)
         {
-            if (args.SData.Name == "KatarinaQ" && args.Target.GetType() == typeof(Obj_AI_Hero))
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.LaneClear)
             {
-                qTarget = (Obj_AI_Hero) args.Target;
+                var minion = MinionManager.GetMinions(Player.Position, 225).FirstOrDefault();
+                if (Menu.Item("laneclearW").GetValue<bool>())
+                    W.Cast(minion);
+                if (Menu.Item("laneclearQ").GetValue<bool>() && !W.IsReady())
+                    Q.Cast(minion);
+            }
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+                if (Menu.Item("useW").GetValue<bool>())
+                    W.Cast();
+            if (Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            {
+                if (Menu.Item("harassW").GetValue<bool>() && W.IsReady()) W.Cast();
             }
         }
-
-
-        private static bool CanCastW(Obj_AI_Hero enemy)
-        {
-            return R.IsReady() || (enemy != null && enemy!=qTarget);
-        }
-
-        #region WardJumping
-        //alles zum Wardjump
-        static void WardJump()
+        public static void WardJump()
         {
             Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
-            if (!E.IsReady())
+            if (!Q.IsReady())
             {
                 return;
             }
+            Vector3 wardJumpPosition = (Player.Position.Distance(Game.CursorPos) < 600) ? Game.CursorPos : Player.Position.Extend(Game.CursorPos, 600);
             var lstGameObjects = ObjectManager.Get<Obj_AI_Base>().ToArray();
-            Obj_AI_Base entityToWardJump = lstGameObjects.FirstOrDefault(obj => 
-                obj.Position.Distance(MaxPosition(Player.Position.To2D(), Game.CursorPos.To2D(), E.Range).To3D()) < 150
-                && (obj is Obj_AI_Minion || obj is Obj_AI_Hero) 
+            Obj_AI_Base entityToWardJump = lstGameObjects.FirstOrDefault(obj =>
+                obj.Position.Distance(wardJumpPosition) < 150
+                && (obj is Obj_AI_Minion || obj is Obj_AI_Hero)
                 && !obj.IsMe && !obj.IsDead
-                && obj.Position.Distance(Player.Position) < E.Range);
+                && obj.Position.Distance(Player.Position) < Q.Range);
 
             if (entityToWardJump != null)
             {
-                E.Cast(entityToWardJump);
+                Q.Cast(entityToWardJump);
             }
             else
             {
                 int wardId = GetWardItem();
 
-                if (wardId != -1)
+
+                if (wardId != -1 && !wardJumpPosition.IsWall())
                 {
-                    PutWard(MaxPosition(Player.Position.To2D(), Game.CursorPos.To2D(), 600), (ItemId) wardId);
+                    PutWard(wardJumpPosition.To2D(), (ItemId)wardId);
                     lstGameObjects = ObjectManager.Get<Obj_AI_Base>().ToArray();
-                    E.Cast(
+                    Q.Cast(
                         lstGameObjects.FirstOrDefault(obj =>
-                        obj.Position.Distance(Player.Position.Extend(Game.CursorPos, 600)) < 150 &&
-                        obj is Obj_AI_Minion && obj.Position.Distance(Player.Position) < E.Range));
+                        obj.Position.Distance(wardJumpPosition) < 150 &&
+                        obj is Obj_AI_Minion && obj.Position.Distance(Player.Position) < Q.Range));
                 }
             }
 
         }
-
-
-        
 
         public static int GetWardItem()
         {
@@ -259,53 +216,14 @@ namespace e.Motion_Katarina{
             return -1;
         }
 
-        public static bool PutWard(Vector2 pos, ItemId warditem)
+        public static void PutWard(Vector2 pos, ItemId warditem)
         {
+
             foreach (var slot in Player.InventoryItems.Where(slot => slot.Id == warditem))
             {
                 ObjectManager.Player.Spellbook.CastSpell(slot.SpellSlot, pos.To3D());
-                return true;
+                return;
             }
-            return false;
-        }
-        
-        public static bool InDistance(Vector2 pos1, Vector2 pos2, float distance)
-        {
-            float dist2 = Vector2.DistanceSquared(pos1, pos2);
-            return dist2 <= distance * distance;
-        }
-
-        public static Vector2 MaxPosition(Vector2 init, Vector2 pos, float distance)
-        {
-            if (InDistance(init, pos, distance))
-            {
-                return pos;
-            }
-            return distance*(pos - init).Normalized()+init;
-        }
-        #endregion
-
-        //Calculating Damage
-        static float CalculateDamage(Obj_AI_Hero target)
-        {
-            double damage = 0d;
-            if (Q.IsReady())
-            {
-                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q) + ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
-            }
-            if (W.IsReady())
-            {
-                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.W);
-            }
-            if (E.IsReady())
-            {
-                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.E);
-            }
-            if (R.IsReady() || (ObjectManager.Player.GetSpell(R.Slot).State == SpellState.Surpressed && R.Level > 0))
-            {
-                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.R, 0) * 6;
-            }
-            return (float)damage;
         }
     }
 }
