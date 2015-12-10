@@ -21,7 +21,7 @@ namespace e.Motion_Katarina{
         static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
         static Obj_AI_Hero qTarget = null;
         static Obj_AI_Base[] _lstGameObjects;
-        static Obj_AI_Base EntityToWardJump;
+        static Obj_AI_Hero[] allEnemy = HeroManager.Enemies.ToArray();
         static int lastward;
         static bool WardJumpReady = false;
         #endregion
@@ -39,6 +39,9 @@ namespace e.Motion_Katarina{
             W = new Spell(SpellSlot.W, 375);
             E = new Spell(SpellSlot.E, 700);
             R = new Spell(SpellSlot.R, 550);
+            Game.PrintChat("Summoner F Hash Code");
+            Game.PrintChat(SpellSlot.Summoner2.GetHashCode().ToString());
+
             #endregion
 
             Utility.HpBarDamageIndicator.Enabled = true;
@@ -124,6 +127,7 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(true);
                 _orbwalker.SetMovement(true);
+                Killsteal();
             }
             Demark();
             if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -133,7 +137,7 @@ namespace e.Motion_Katarina{
             }
             if (_Menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _Menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
             {
-                WardJump();
+                WardJump(Game.CursorPos);
             }
         }
 
@@ -211,11 +215,8 @@ namespace e.Motion_Katarina{
             if (qTarget.HasBuff("katarinaqmark") || Q.Cooldown < 3)
             {
                 qTarget = null;
-                
-                
             }
         }
-
 
         static bool CanCastW(Obj_AI_Hero enemy)
         {
@@ -226,14 +227,15 @@ namespace e.Motion_Katarina{
 
 
         #region WardJumping
-        static void WardJump()
+        static void WardJump(Vector3 where,bool move = true)
         {
-            Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+            if(move)
+                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
             if (!E.IsReady())
             {
                 return;
             }
-            Vector3 wardJumpPosition = (Player.Position.Distance(Game.CursorPos) < 600) ? Game.CursorPos : Player.Position.Extend(Game.CursorPos, 600);
+            Vector3 wardJumpPosition = Player.Position.Distance(where) < 600 ? where : Player.Position.Extend(Game.CursorPos, 600);
             var lstGameObjects = ObjectManager.Get<Obj_AI_Base>().ToArray();
             Obj_AI_Base entityToWardJump = lstGameObjects.FirstOrDefault(obj =>
                 obj.Position.Distance(wardJumpPosition) < 150
@@ -281,5 +283,105 @@ namespace e.Motion_Katarina{
             }
         }
         #endregion
+        //Calculating Damage
+        static float CalculateDamage(Obj_AI_Hero target)
+        {
+            double damage = 0d;
+            if (Q.IsReady())
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q) + ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
+            }
+            if (target.HasBuff("katarinaqmark"))
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
+            }
+            if (W.IsReady())
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.W);
+            }
+            if (E.IsReady())
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.E);
+            }
+            if (R.IsReady() || (ObjectManager.Player.GetSpell(R.Slot).State == SpellState.Surpressed && R.Level > 0))
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.R);
+            }
+            return (float)damage;
+        }
+
+        #region Killsteal
+        static bool CanKill(Obj_AI_Hero target, bool useq, bool usew, bool usee)
+        {
+            double damage = 0;
+            if (!useq && !usew && !usee)
+                return false;
+            if (Q.IsReady() && useq)
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q);
+                if (W.IsReady() && usew || E.IsReady() && usee)
+                {
+                    damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
+                }
+
+            }
+            if (target.HasBuff("katarinaqmark"))
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
+            }
+            if (W.IsReady() && usew)
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.W);
+            }
+            if (E.IsReady() && usee)
+            {
+                damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.E);
+            }
+            return damage >= target.Health;
+        }
+
+        private static void Killsteal()
+        {
+            foreach (Obj_AI_Hero enemy in allEnemy)
+            {
+                if (Player.Distance(enemy) > 1375)
+                {
+                    return;
+                }
+                if (CanKill(enemy, false, _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), false) && Player.Distance(enemy) < W.Range - 10)
+                {
+                    W.Cast(enemy);
+                    return;
+                }
+                if (CanKill(enemy, false , false, _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && Player.Distance(enemy) < 675)
+                {
+                    E.Cast(enemy);
+                    return;
+                }
+                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), false, false) && Player.Distance(enemy) < 675)
+                {
+                    Q.Cast(enemy);
+                    return;
+                }
+                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && Player.Distance(enemy) < 675)
+                {
+                    if(Q.IsReady())
+                        Q.Cast(enemy);
+                    if(E.IsReady())
+                        E.Cast(enemy);
+                    if (W.IsReady() && Player.Distance(enemy) < W.Range - 10)
+                        W.Cast();
+                    return; 
+                }
+                //KS with Wardjump
+                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && Player.Distance(enemy) < 1300 && E.IsReady())
+                {
+                    WardJump(enemy.Position,false);
+                    Q.Cast(enemy);
+                }
+            }
+        }
+        #endregion
+
     }
 }
