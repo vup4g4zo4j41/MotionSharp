@@ -52,39 +52,39 @@ namespace e.Motion_Katarina{
             _Menu = new Menu("e.Motion Katarina", "motion.katarina", true);
 
             //Orbwalker-Menü
-            Menu OrbwalkerMenu = new Menu("Orbwalker", "motion.katarina.orbwalker");
-            _orbwalker = new Orbwalking.Orbwalker(OrbwalkerMenu);
-            _Menu.AddSubMenu(OrbwalkerMenu);
+            Menu orbwalkerMenu = new Menu("Orbwalker", "motion.katarina.orbwalker");
+            _orbwalker = new Orbwalking.Orbwalker(orbwalkerMenu);
+            _Menu.AddSubMenu(orbwalkerMenu);
 
             //Combo-Menü
-            Menu ComboMenu = new Menu("Combo", "motion.katarina.Combo");
+            Menu comboMenu = new Menu("Combo", "motion.katarina.Combo");
             {
-                ComboMenu.AddItem(new MenuItem("motion.katarina.Combo.useq", "Use Q").SetValue(true));
-                ComboMenu.AddItem(new MenuItem("motion.katarina.Combo.usew", "Use W").SetValue(true));
-                ComboMenu.AddItem(new MenuItem("motion.katarina.Combo.usee", "Use E").SetValue(true));
-                ComboMenu.AddItem(new MenuItem("motion.katarina.Combo.user", "Use R").SetValue(true));
+                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.useq", "Use Q").SetValue(true));
+                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usew", "Use W").SetValue(true));
+                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usee", "Use E").SetValue(true));
+                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.user", "Use R").SetValue(true));
             }
-            _Menu.AddSubMenu(ComboMenu);
+            _Menu.AddSubMenu(comboMenu);
 
             //Harrass-Menü
-            Menu HarrassMenu = new Menu("Harrass", "motion.katarina.harrass");
+            Menu harassMenu = new Menu("Harass", "motion.katarina.harrass");
             {
-                HarrassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
-                HarrassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
-                HarrassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass"));
-                HarrassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
+                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
+                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
+                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass"));
+                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
             }
-            _Menu.AddSubMenu(HarrassMenu);
+            _Menu.AddSubMenu(harassMenu);
 
             //KS-Menü
-            Menu KSMenu = new Menu("KillSteal", "motion.katarina.killsteal");
+            Menu ksMenu = new Menu("KillSteal", "motion.katarina.killsteal");
             {
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
+                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
+                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
+                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
+                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
             }
-            _Menu.AddSubMenu(KSMenu);
+            _Menu.AddSubMenu(ksMenu);
 
             //Misc-Menü
             Menu miscMenu = new Menu("Miscellanious","motion.katarina.misc");
@@ -127,11 +127,13 @@ namespace e.Motion_Katarina{
                 Killsteal();
             }
             Demark();
-            if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
+            if (true)
             {
                 //Combo
                 Combo();
             }
+
+            Harass();
             if (_Menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _Menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
             {
                 WardJump(Game.CursorPos);
@@ -160,36 +162,30 @@ namespace e.Motion_Katarina{
 
         static void Combo()
         {
-            if (HasRBuff())
+            if (HasRBuff() || _orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
                 return;
-            var useq = _Menu.Item("motion.katarina.Combo.useq").GetValue<bool>();
-            var usew = _Menu.Item("motion.katarina.Combo.usew").GetValue<bool>();
-            var usee = _Menu.Item("motion.katarina.Combo.usee").GetValue<bool>();
-            var user = _Menu.Item("motion.katarina.Combo.user").GetValue<bool>();
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
             if(target != null && !target.IsZombie)
             {
-                if(useq && Q.IsReady() && target.IsValidTarget(Q.Range))
+                if(_Menu.Item("motion.katarina.Combo.useq").GetValue<bool>() && Q.IsReady() && target.IsValidTarget(Q.Range))
                 {
                     Q.Cast(target);
                 }
-                if (usew && W.IsReady() && target.IsValidTarget(W.Range - 10) && CanCastW(target))
+                if (_Menu.Item("motion.katarina.Combo.usew").GetValue<bool>() && W.IsReady() && target.IsValidTarget(W.Range - 10) && CanCastW(target))
                 {
                     W.Cast(target);
                 }
-                if (user && R.IsReady() && target.IsValidTarget(375))
+                if (_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() && R.IsReady() && target.IsValidTarget(375))
                 {
                     R.Cast();
                     _orbwalker.SetAttack(false);
                     _orbwalker.SetMovement(false);
                 }
-                if (usee && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !target.IsValidTarget(375)))
+                if (_Menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)))
                 {
                     E.Cast(target);
                 }
-                
             }
-            
         }
 
 
@@ -356,15 +352,16 @@ namespace e.Motion_Katarina{
                 if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), false, false) && enemy.IsValidTarget(675))
                 {
                     Q.Cast(enemy);
+                    qTarget = enemy;
                     return;
                 }
                 if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(675))
                 {
                     if (Q.IsReady())
                         Q.Cast(enemy);
-                    if (E.IsReady())
+                    if (E.IsReady() && W.IsReady() || qTarget != enemy)
                         E.Cast(enemy);
-                    if (W.IsReady() && enemy.IsValidTarget(390))
+                    if (W.IsReady() && enemy.IsValidTarget(390) && qTarget != enemy)
                         W.Cast();
                     return;
                 }
@@ -385,7 +382,15 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            //if(target != null && )
+            if (target != null && _Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            {
+                if (Q.IsReady())
+                    Q.Cast(target);
+                if (W.IsReady() && null != TargetSelector.GetTarget(W.Range - 10, TargetSelector.DamageType.Magical))
+                {
+                    W.Cast();
+                }
+            }
         }
 
         #endregion
