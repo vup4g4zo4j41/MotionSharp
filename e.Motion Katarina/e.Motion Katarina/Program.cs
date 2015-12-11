@@ -124,11 +124,7 @@ namespace e.Motion_Katarina{
                 Killsteal();
             }
             Demark();
-            if (true)
-            {
-                //Combo
-                Combo();
-            }
+            Combo();
 
             Harass();
             if (_Menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _Menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
@@ -373,7 +369,7 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && _Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _Menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<bool>() || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _Menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active))
             {
                 if (Q.IsReady())
                     Q.Cast(target);
