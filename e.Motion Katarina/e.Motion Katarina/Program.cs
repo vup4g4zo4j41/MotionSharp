@@ -21,7 +21,7 @@ namespace e.Motion_Katarina{
         static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
         static Obj_AI_Hero qTarget = null;
         static Obj_AI_Base[] _lstGameObjects;
-        static Obj_AI_Hero[] allEnemy = HeroManager.Enemies.ToArray();
+        static readonly Obj_AI_Hero[] allEnemy = HeroManager.Enemies.ToArray();
         static int lastward;
         static bool WardJumpReady = false;
         #endregion
@@ -167,8 +167,9 @@ namespace e.Motion_Katarina{
                 if(_Menu.Item("motion.katarina.Combo.useq").GetValue<bool>() && Q.IsReady() && target.IsValidTarget(Q.Range))
                 {
                     Q.Cast(target);
+                    qTarget = target;
                 }
-                if (_Menu.Item("motion.katarina.Combo.usew").GetValue<bool>() && W.IsReady() && target.IsValidTarget(W.Range - 10) && CanCastW(target))
+                if (_Menu.Item("motion.katarina.Combo.usew").GetValue<bool>() && W.IsReady() && target.IsValidTarget(W.Range - 10) && target != qTarget)
                 {
                     W.Cast(target);
                 }
@@ -178,7 +179,7 @@ namespace e.Motion_Katarina{
                     _orbwalker.SetAttack(false);
                     _orbwalker.SetMovement(false);
                 }
-                if (_Menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)))
+                if (_Menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)) && (W.IsReady() || R.IsReady() && target != qTarget ))
                 {
                     E.Cast(target);
                 }
@@ -206,13 +207,6 @@ namespace e.Motion_Katarina{
             {
                 qTarget = null;
             }
-        }
-
-        static bool CanCastW(Obj_AI_Hero enemy)
-        {
-            if(R.IsReady() || enemy!=qTarget)
-            return true;
-        return false;
         }
 
 
