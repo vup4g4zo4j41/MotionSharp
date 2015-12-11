@@ -376,8 +376,10 @@ namespace e.Motion_Katarina{
                 //KS with Wardjump
                 if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && Player.Distance(enemy) < 1300 && E.IsReady())
                 {
-                    WardJump(enemy.Position,false);
-                    Q.Cast(enemy);
+                    WardJump(enemy.Position, false);
+                    if (Player.Distance(enemy) < 675)
+                        Q.Cast(enemy);
+                    return;
                 }
             }
         }
