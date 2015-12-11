@@ -79,10 +79,10 @@ namespace e.Motion_Katarina{
             //KS-Menü
             Menu KSMenu = new Menu("KillSteal", "motion.katarina.killsteal");
             {
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.q", "Use Q"));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.w", "Use W"));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.e", "Use E"));
-                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump"));
+                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
+                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
+                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
+                KSMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
             }
             _Menu.AddSubMenu(KSMenu);
 
@@ -124,7 +124,7 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(true);
                 _orbwalker.SetMovement(true);
-                //Killsteal();
+                Killsteal();
             }
             Demark();
             if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -348,7 +348,7 @@ namespace e.Motion_Katarina{
                     W.Cast(enemy);
                     return;
                 }
-                if (CanKill(enemy, false , false, _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(700))
+                if (CanKill(enemy, false, false, _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(700))
                 {
                     E.Cast(enemy);
                     return;
@@ -360,16 +360,16 @@ namespace e.Motion_Katarina{
                 }
                 if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(675))
                 {
-                    if(Q.IsReady())
+                    if (Q.IsReady())
                         Q.Cast(enemy);
-                    if(E.IsReady())
+                    if (E.IsReady())
                         E.Cast(enemy);
                     if (W.IsReady() && enemy.IsValidTarget(390))
                         W.Cast();
-                    return; 
+                    return;
                 }
                 //KS with Wardjump
-                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && enemy.IsValidTarget(1300))
+                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
                 {
                     WardJump(enemy.Position, false);
                     if (enemy.IsValidTarget(675))
