@@ -39,9 +39,6 @@ namespace e.Motion_Katarina{
             W = new Spell(SpellSlot.W, 375);
             E = new Spell(SpellSlot.E, 700);
             R = new Spell(SpellSlot.R, 550);
-            Game.PrintChat("Summoner F Hash Code");
-            Game.PrintChat(SpellSlot.Summoner2.GetHashCode().ToString());
-
             #endregion
 
             Utility.HpBarDamageIndicator.Enabled = true;
@@ -71,7 +68,7 @@ namespace e.Motion_Katarina{
             {
                 harassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
                 harassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
-                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass"));
+                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass").SetValue(true));
                 harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
             }
             _Menu.AddSubMenu(harassMenu);
@@ -382,14 +379,12 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && _Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            if (target != null && _Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _Menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<bool>() || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
             {
                 if (Q.IsReady())
                     Q.Cast(target);
                 if (W.IsReady() && null != TargetSelector.GetTarget(W.Range - 10, TargetSelector.DamageType.Magical))
-                {
                     W.Cast();
-                }
             }
         }
 
