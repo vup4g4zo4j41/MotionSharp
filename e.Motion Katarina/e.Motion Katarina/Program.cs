@@ -56,9 +56,6 @@ namespace e.Motion_Katarina{
             _orbwalker = new Orbwalking.Orbwalker(OrbwalkerMenu);
             _Menu.AddSubMenu(OrbwalkerMenu);
 
-            //TargetSelector-Menü
-            TargetSelector.AddToMenu(_Menu);
-
             //Combo-Menü
             Menu ComboMenu = new Menu("Combo", "motion.katarina.Combo");
             {
@@ -127,7 +124,7 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(true);
                 _orbwalker.SetMovement(true);
-                Killsteal();
+                //Killsteal();
             }
             Demark();
             if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -212,7 +209,7 @@ namespace e.Motion_Katarina{
 
         static void Demark()
         {
-            if (qTarget.HasBuff("katarinaqmark") || Q.Cooldown < 3)
+            if (qTarget!=null && qTarget.HasBuff("katarinaqmark") || Q.Cooldown < 3)
             {
                 qTarget = null;
             }
@@ -344,40 +341,38 @@ namespace e.Motion_Katarina{
         {
             foreach (Obj_AI_Hero enemy in allEnemy)
             {
-                if (Player.Distance(enemy) > 1375)
-                {
+                if (enemy == null)
                     return;
-                }
-                if (CanKill(enemy, false, _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), false) && Player.Distance(enemy) < W.Range - 10)
+                if (CanKill(enemy, false, _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), false) && enemy.IsValidTarget(390))
                 {
                     W.Cast(enemy);
                     return;
                 }
-                if (CanKill(enemy, false , false, _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && Player.Distance(enemy) < 675)
+                if (CanKill(enemy, false , false, _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(700))
                 {
                     E.Cast(enemy);
                     return;
                 }
-                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), false, false) && Player.Distance(enemy) < 675)
+                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), false, false) && enemy.IsValidTarget(675))
                 {
                     Q.Cast(enemy);
                     return;
                 }
-                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && Player.Distance(enemy) < 675)
+                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(675))
                 {
                     if(Q.IsReady())
                         Q.Cast(enemy);
                     if(E.IsReady())
                         E.Cast(enemy);
-                    if (W.IsReady() && Player.Distance(enemy) < W.Range - 10)
+                    if (W.IsReady() && enemy.IsValidTarget(390))
                         W.Cast();
                     return; 
                 }
                 //KS with Wardjump
-                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && Player.Distance(enemy) < 1300 && E.IsReady())
+                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && enemy.IsValidTarget(1300))
                 {
                     WardJump(enemy.Position, false);
-                    if (Player.Distance(enemy) < 675)
+                    if (enemy.IsValidTarget(675))
                         Q.Cast(enemy);
                     return;
                 }
@@ -385,5 +380,14 @@ namespace e.Motion_Katarina{
         }
         #endregion
 
+        #region Harrass
+
+        private static void Harass()
+        {
+            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            //if(target != null && )
+        }
+
+        #endregion
     }
 }
