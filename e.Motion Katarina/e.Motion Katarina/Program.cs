@@ -104,7 +104,7 @@ namespace e.Motion_Katarina{
             _Menu.AddToMainMenu();
 
             #endregion
-            Game.PrintChat("<font color='#bb0000'>e</font><font color='#0000cc'>Motion</font> Katarina loaded");
+            Game.PrintChat("<font color='#bb0000'>e</font>.<font color='#0000cc'>Motion</font> Katarina loaded");
 
             #region Subscriptions
             Game.OnUpdate += Game_OnUpdate;
@@ -479,7 +479,7 @@ namespace e.Motion_Katarina{
         #endregion
         private static void Obj_AI_Base_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
         {
-            if (sender.IsMe && HasRBuff() && Utils.GameTimeTickCount >= whenToCancelR && _Menu.Item("motion.katarina.misc.noRCancel").GetValue<bool>())
+            if (sender.IsMe && HasRBuff() && Utils.GameTimeTickCount <= whenToCancelR && _Menu.Item("motion.katarina.misc.noRCancel").GetValue<bool>())
                 args.Process = false;
         }
 
