@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
-using Color = System.Drawing.Color;
 using SharpDX;
-using SharpDX.Win32;
 
 
 namespace e.Motion_Katarina{
@@ -85,8 +80,23 @@ namespace e.Motion_Katarina{
 
             //Lasthit-Menü
             Menu lasthit = new Menu("Lasthit", "motion.katarina.lasthit");
+            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.useq", "Use Q").SetValue(true));
             lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usew", "Use W").SetValue(true));
             _Menu.AddSubMenu(lasthit);
+
+            //Laneclear-Menü
+            Menu laneclear = new Menu("Laneclear", "motion.katarina.laneclear");
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.useq", "Use Q").SetValue(true));
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.usew", "Use W").SetValue(true));
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.minw", "Minimum Minions to use W").SetValue(new Slider(3,1,6)));
+            _Menu.AddSubMenu(laneclear);
+
+            //Jungleclear-Menü
+            Menu jungleclear = new Menu("Jungleclear", "motion.katarina.jungleclear");
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.useq", "Use Q").SetValue(true));
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usew", "Use W").SetValue(true));
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usee", "Use E").SetValue(true));
+            _Menu.AddSubMenu(jungleclear);
 
             //alles zum Hauptmenü hinzufügen
             _Menu.AddToMainMenu();
@@ -95,7 +105,6 @@ namespace e.Motion_Katarina{
             Game.PrintChat("<font color='#bb0000'>e</font><font color='#0000cc'>Motion</font> Katarina loaded");
 
             #region Subscriptions
-            Drawing.OnDraw += Drawing_OnDraw;
             Game.OnUpdate += Game_OnUpdate;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
 
@@ -105,6 +114,7 @@ namespace e.Motion_Katarina{
 
 
         static void Game_OnUpdate(EventArgs args) {
+            Demark();
             if (Player.IsDead)
             {
                 return;
@@ -113,27 +123,22 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(false);
                 _orbwalker.SetMovement(false);
+                return;
             }
-            else
-            {
-                _orbwalker.SetAttack(true);
-                _orbwalker.SetMovement(true);
-                Killsteal();
-            }
-            Demark();
+            _orbwalker.SetAttack(true);
+            _orbwalker.SetMovement(true);
+            Killsteal();
             Combo();
-
+            Lasthit();
             Harass();
+            LaneClear();
+            JungleClear();
             if (_Menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _Menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
             {
                 WardJump(Game.CursorPos);
             }
         }
-
-
-
-        static void Drawing_OnDraw(EventArgs args) {
-        }
+        
 
 
 
@@ -152,7 +157,7 @@ namespace e.Motion_Katarina{
 
         static void Combo()
         {
-            if (HasRBuff() || _orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
                 return;
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
             if(target != null && !target.IsZombie)
@@ -377,19 +382,93 @@ namespace e.Motion_Katarina{
 
         private static void Lasthit()
         {
-            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || !W.IsReady() || _Menu.Item("motion.katarina.lasthit.usew").GetValue<bool>())
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit)
                 return;
-            Obj_AI_Minion[] sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
-            foreach (Obj_AI_Minion minion in sourroundingMinions)
+            Obj_AI_Minion[] sourroundingMinions;
+            if (_Menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() && W.IsReady())
             {
-                if (!minion.IsDead 
-                    && HealthPrediction.GetHealthPrediction(minion, (Player.CanAttack ? Utils.GameTimeTickCount + 25 + Game.Ping / 2 : Orbwalking.LastAATick + (int)Player.AttackDelay * 1000) + (int)Player.AttackCastDelay * 1000) <= 0 
-                    && _orbwalker.GetTarget() != minion
-                    && W.GetDamage(minion) > minion.Health)
+                sourroundingMinions = (Obj_AI_Minion[]) MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
+                //Only Cast W when minion is not killable with Autoattacks
+                if (sourroundingMinions.Any(minion => !minion.IsDead
+                                                      &&
+                                                      HealthPrediction.GetHealthPrediction(minion,
+                                                          (Player.CanAttack
+                                                              ? Utils.GameTimeTickCount + 25 + Game.Ping/2
+                                                              : Orbwalking.LastAATick + (int) Player.AttackDelay*1000) +
+                                                          (int) Player.AttackCastDelay*1000) <= 0
+                                                      && _orbwalker.GetTarget() != minion
+                                                      && W.GetDamage(minion) > minion.Health))
                 {
                     W.Cast();
                 }
+            }
+            if (_Menu.Item("motion.katarina.lasthit.useq").GetValue<bool>() && Q.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[]) MinionManager.GetMinions(Player.Position, Q.Range).ToArray();
+                if (sourroundingMinions.Any(minion => !minion.IsDead && Q.GetDamage(minion) > minion.Health))
+                {
+                    Q.Cast();
+                }
+            }
+        }
+        #endregion
 
+        #region LaneClear
+        private static void LaneClear()
+        {
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
+                return;
+            Obj_AI_Minion[] sourroundingMinions;
+            if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && W.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
+                if (sourroundingMinions.GetLength(0) >= _Menu.Item("motion.katarina.laneclear.minw").GetValue<Slider>().Value)
+                {
+                    W.Cast();
+                }
+            }
+            if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && Q.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, Q.Range - 5).ToArray();
+                if (sourroundingMinions.Any(minion => !minion.IsDead))
+                {
+                    Q.Cast();
+                }
+            }
+
+        }
+        #endregion
+
+        #region Jungleclear
+
+        private static void JungleClear()
+        {
+            Obj_AI_Minion[] sourroundingMinions;
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
+                return;
+            if (_Menu.Item("motion.katarina.laneclear.useq").GetValue<bool>() && Q.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                if (sourroundingMinions.GetLength(0) >= 1)
+                {
+                    Q.Cast(sourroundingMinions[0]);
+                }
+            }
+            if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && W.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5, MinionTypes.All,MinionTeam.Neutral).ToArray();
+                if (sourroundingMinions.GetLength(0) >= 1)
+                {
+                    W.Cast();
+                }
+            }
+            if (_Menu.Item("motion.katarina.laneclear.usee").GetValue<bool>() && E.IsReady())
+            {
+                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                if (sourroundingMinions.GetLength(0) >= 1)
+                {
+                    E.Cast(sourroundingMinions[0]);
+                }
             }
         }
 
