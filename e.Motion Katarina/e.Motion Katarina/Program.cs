@@ -234,12 +234,8 @@ namespace e.Motion_Katarina{
 
                 if (wardId != -1 && !wardJumpPosition.IsWall())
                 {
+                    WardJumpReady = true;
                     PutWard(wardJumpPosition.To2D(), (ItemId)wardId);
-                    lstGameObjects = ObjectManager.Get<Obj_AI_Base>().ToArray();
-                    E.Cast(
-                        lstGameObjects.FirstOrDefault(obj =>
-                        obj.Position.Distance(wardJumpPosition) < 150 &&
-                        obj is Obj_AI_Minion && obj.Position.Distance(Player.Position) < E.Range));
                 }
             }
 
@@ -375,6 +371,28 @@ namespace e.Motion_Katarina{
                     Q.Cast(target);
                 if (W.IsReady() && null != TargetSelector.GetTarget(W.Range - 10, TargetSelector.DamageType.Magical))
                     W.Cast();
+            }
+        }
+
+        #endregion
+
+        #region Lasthit
+
+        private static void Lasthit()
+        {
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || !W.IsReady())
+                return;
+            Obj_AI_Minion[] sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
+            foreach (Obj_AI_Minion minion in sourroundingMinions)
+            {
+                if (!minion.IsDead 
+                    && HealthPrediction.GetHealthPrediction(minion, (Player.CanAttack ? Utils.GameTimeTickCount + 25 + Game.Ping / 2 : Orbwalking.LastAATick + (int)Player.AttackDelay * 1000) + (int)Player.AttackCastDelay * 1000) <= 0 
+                    && _orbwalker.GetTarget() != minion
+                    && W.GetDamage(minion) > minion.Health)
+                {
+                    W.Cast();
+                }
+
             }
         }
 
