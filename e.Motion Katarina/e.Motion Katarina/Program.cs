@@ -55,41 +55,38 @@ namespace e.Motion_Katarina{
 
             //Combo-Menü
             Menu comboMenu = new Menu("Combo", "motion.katarina.Combo");
-            {
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.useq", "Use Q").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usew", "Use W").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usee", "Use E").SetValue(true));
-                comboMenu.AddItem(new MenuItem("motion.katarina.Combo.user", "Use R").SetValue(true));
-            }
+            comboMenu.AddItem(new MenuItem("motion.katarina.Combo.useq", "Use Q").SetValue(true));
+            comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usew", "Use W").SetValue(true));
+            comboMenu.AddItem(new MenuItem("motion.katarina.Combo.usee", "Use E").SetValue(true));
+            comboMenu.AddItem(new MenuItem("motion.katarina.Combo.user", "Use R").SetValue(true));
             _Menu.AddSubMenu(comboMenu);
 
             //Harrass-Menü
             Menu harassMenu = new Menu("Harass", "motion.katarina.harrass");
-            {
-                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
-                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
-                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass").SetValue(true));
-                harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
-            }
+            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
+            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
+            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass").SetValue(true));
+            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
             _Menu.AddSubMenu(harassMenu);
 
             //KS-Menü
-            Menu ksMenu = new Menu("KillSteal", "motion.katarina.killsteal");
-            {
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
-                ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
-            }
+            Menu ksMenu = new Menu("Killsteal", "motion.katarina.killsteal");
+            ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
+            ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
+            ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
+            ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
             _Menu.AddSubMenu(ksMenu);
 
             //Misc-Menü
             Menu miscMenu = new Menu("Miscellanious","motion.katarina.misc");
-            {
-                miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
-                miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
-            }
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             _Menu.AddSubMenu(miscMenu);
+
+            //Lasthit-Menü
+            Menu lasthit = new Menu("Lasthit", "motion.katarina.lasthit");
+            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usew", "Use W").SetValue(true));
+            _Menu.AddSubMenu(lasthit);
 
             //alles zum Hauptmenü hinzufügen
             _Menu.AddToMainMenu();
@@ -380,7 +377,7 @@ namespace e.Motion_Katarina{
 
         private static void Lasthit()
         {
-            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || !W.IsReady())
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || !W.IsReady() || _Menu.Item("motion.katarina.lasthit.usew").GetValue<bool>())
                 return;
             Obj_AI_Minion[] sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
             foreach (Obj_AI_Minion minion in sourroundingMinions)
