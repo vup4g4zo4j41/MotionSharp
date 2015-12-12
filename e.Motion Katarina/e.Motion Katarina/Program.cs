@@ -9,16 +9,17 @@ namespace e.Motion_Katarina{
     class Program {
 
         #region Declaration
-        static Spell Q, W, E, R;
-        static SpellSlot IgniteSlot;
-        static Orbwalking.Orbwalker _orbwalker;
-        static Menu _Menu;
-        static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
-        static Obj_AI_Hero qTarget = null;
-        static Obj_AI_Base[] _lstGameObjects;
-        static readonly Obj_AI_Hero[] allEnemy = HeroManager.Enemies.ToArray();
-        static int lastward;
-        static bool WardJumpReady = false;
+        private static Spell Q, W, E, R;
+        private static SpellSlot IgniteSlot;
+        private static Orbwalking.Orbwalker _orbwalker;
+        private static Menu _Menu;
+        private static int whenToCancelR;
+        private static Obj_AI_Hero Player { get { return ObjectManager.Player; } }
+        private static Obj_AI_Hero qTarget = null;
+        private static Obj_AI_Base[] _lstGameObjects;
+        private static readonly Obj_AI_Hero[] allEnemy = HeroManager.Enemies.ToArray();
+        private static int lastward;
+        private static bool WardJumpReady = false;
         #endregion
 
 
@@ -76,6 +77,7 @@ namespace e.Motion_Katarina{
             Menu miscMenu = new Menu("Miscellanious","motion.katarina.misc");
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.noRCancel", "Prevent R Cancel").SetValue(true).SetTooltip("This is preventing you from cancelling R accidentally within the first 0.4 seconds of cast"));
             _Menu.AddSubMenu(miscMenu);
 
             //Lasthit-Menü
@@ -107,6 +109,7 @@ namespace e.Motion_Katarina{
             #region Subscriptions
             Game.OnUpdate += Game_OnUpdate;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
+            Obj_AI_Base.OnIssueOrder += Obj_AI_Base_OnIssueOrder;
 
             #endregion
         }
@@ -176,8 +179,9 @@ namespace e.Motion_Katarina{
                     R.Cast();
                     _orbwalker.SetAttack(false);
                     _orbwalker.SetMovement(false);
+                    whenToCancelR = Utils.GameTimeTickCount + 400;
                 }
-                if (_Menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)) && (W.IsReady() || R.IsReady() && target != qTarget ))
+                if (_Menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_Menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375) && W.IsReady() || R.IsReady() || target != qTarget))
                 {
                     E.Cast(target);
                 }
@@ -212,12 +216,12 @@ namespace e.Motion_Katarina{
         static void WardJump(Vector3 where,bool move = true)
         {
             if(move)
-                Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
+                Player.IssueOrder(GameObjectOrder.MoveTo, where);
             if (!E.IsReady())
             {
                 return;
             }
-            Vector3 wardJumpPosition = Player.Position.Distance(where) < 600 ? where : Player.Position.Extend(Game.CursorPos, 600);
+            Vector3 wardJumpPosition = Player.Position.Distance(where) < 600 ? where : Player.Position.Extend(where, 600);
             var lstGameObjects = ObjectManager.Get<Obj_AI_Base>().ToArray();
             Obj_AI_Base entityToWardJump = lstGameObjects.FirstOrDefault(obj =>
                 obj.Position.Distance(wardJumpPosition) < 150
@@ -367,7 +371,7 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _Menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active))
+            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_Menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _Menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active) && target != qTarget)
             {
                 if (Q.IsReady())
                     Q.Cast(target);
@@ -405,9 +409,10 @@ namespace e.Motion_Katarina{
             if (_Menu.Item("motion.katarina.lasthit.useq").GetValue<bool>() && Q.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range).ToArray();
-                if (sourroundingMinions.Any(minion => !minion.IsDead && Q.GetDamage(minion) > minion.Health))
+                foreach (var minion in sourroundingMinions.Where(minion => !minion.IsDead && Q.GetDamage(minion) > minion.Health))
                 {
-                    Q.Cast();
+                    Q.Cast(minion);
+                    break;
                 }
             }
         }
@@ -427,15 +432,15 @@ namespace e.Motion_Katarina{
                     W.Cast();
                 }
             }
-            if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && Q.IsReady())
+            if (_Menu.Item("motion.katarina.laneclear.useq").GetValue<bool>() && Q.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range - 5).ToArray();
-                if (sourroundingMinions.Any(minion => !minion.IsDead))
+                foreach (var minion in sourroundingMinions.Where(minion => !minion.IsDead))
                 {
-                    Q.Cast();
+                    Q.Cast(minion);
+                    break;
                 }
             }
-
         }
         #endregion
 
@@ -446,7 +451,7 @@ namespace e.Motion_Katarina{
             Obj_AI_Base[] sourroundingMinions;
             if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
                 return;
-            if (_Menu.Item("motion.katarina.laneclear.useq").GetValue<bool>() && Q.IsReady())
+            if (_Menu.Item("motion.katarina.jungleclear.useq").GetValue<bool>() && Q.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
@@ -454,7 +459,7 @@ namespace e.Motion_Katarina{
                     Q.Cast(sourroundingMinions[0]);
                 }
             }
-            if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && W.IsReady())
+            if (_Menu.Item("motion.katarina.jungleclear.usew").GetValue<bool>() && W.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5, MinionTypes.All,MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
@@ -462,7 +467,7 @@ namespace e.Motion_Katarina{
                     W.Cast();
                 }
             }
-            if (_Menu.Item("motion.katarina.laneclear.usee").GetValue<bool>() && E.IsReady())
+            if (_Menu.Item("motion.katarina.jungleclear.usee").GetValue<bool>() && E.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
@@ -471,7 +476,12 @@ namespace e.Motion_Katarina{
                 }
             }
         }
-
         #endregion
+        private static void Obj_AI_Base_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        {
+            if (sender.IsMe && HasRBuff() && Utils.GameTimeTickCount >= whenToCancelR && _Menu.Item("motion.katarina.misc.noRCancel").GetValue<bool>())
+                args.Process = false;
+        }
+
     }
 }
