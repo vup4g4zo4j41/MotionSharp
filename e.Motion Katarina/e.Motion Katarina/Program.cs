@@ -384,10 +384,10 @@ namespace e.Motion_Katarina{
         {
             if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit)
                 return;
-            Obj_AI_Minion[] sourroundingMinions;
+            Obj_AI_Base[] sourroundingMinions;
             if (_Menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() && W.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[]) MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
                 //Only Cast W when minion is not killable with Autoattacks
                 if (sourroundingMinions.Any(minion => !minion.IsDead
                                                       &&
@@ -404,7 +404,7 @@ namespace e.Motion_Katarina{
             }
             if (_Menu.Item("motion.katarina.lasthit.useq").GetValue<bool>() && Q.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[]) MinionManager.GetMinions(Player.Position, Q.Range).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range).ToArray();
                 if (sourroundingMinions.Any(minion => !minion.IsDead && Q.GetDamage(minion) > minion.Health))
                 {
                     Q.Cast();
@@ -418,10 +418,10 @@ namespace e.Motion_Katarina{
         {
             if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
                 return;
-            Obj_AI_Minion[] sourroundingMinions;
+            Obj_AI_Base[] sourroundingMinions;
             if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && W.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
                 if (sourroundingMinions.GetLength(0) >= _Menu.Item("motion.katarina.laneclear.minw").GetValue<Slider>().Value)
                 {
                     W.Cast();
@@ -429,7 +429,7 @@ namespace e.Motion_Katarina{
             }
             if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && Q.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, Q.Range - 5).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range - 5).ToArray();
                 if (sourroundingMinions.Any(minion => !minion.IsDead))
                 {
                     Q.Cast();
@@ -443,12 +443,12 @@ namespace e.Motion_Katarina{
 
         private static void JungleClear()
         {
-            Obj_AI_Minion[] sourroundingMinions;
+            Obj_AI_Base[] sourroundingMinions;
             if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LaneClear)
                 return;
             if (_Menu.Item("motion.katarina.laneclear.useq").GetValue<bool>() && Q.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
                 {
                     Q.Cast(sourroundingMinions[0]);
@@ -456,7 +456,7 @@ namespace e.Motion_Katarina{
             }
             if (_Menu.Item("motion.katarina.laneclear.usew").GetValue<bool>() && W.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, W.Range - 5, MinionTypes.All,MinionTeam.Neutral).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5, MinionTypes.All,MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
                 {
                     W.Cast();
@@ -464,7 +464,7 @@ namespace e.Motion_Katarina{
             }
             if (_Menu.Item("motion.katarina.laneclear.usee").GetValue<bool>() && E.IsReady())
             {
-                sourroundingMinions = (Obj_AI_Minion[])MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
                 if (sourroundingMinions.GetLength(0) >= 1)
                 {
                     E.Cast(sourroundingMinions[0]);
