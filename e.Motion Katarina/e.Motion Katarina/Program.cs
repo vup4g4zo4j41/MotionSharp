@@ -78,6 +78,7 @@ namespace e.Motion_Katarina{
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.noRCancel", "Prevent R Cancel").SetValue(true).SetTooltip("This is preventing you from cancelling R accidentally within the first 0.4 seconds of cast"));
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.kswhileult", "Do Killsteal while Ulting").SetValue(true));
             _Menu.AddSubMenu(miscMenu);
 
             //Lasthit-Menü
@@ -118,7 +119,7 @@ namespace e.Motion_Katarina{
 
         static void Game_OnUpdate(EventArgs args) {
             Demark();
-            if (Player.IsDead)
+            if (Player.IsDead || Player.IsRecalling())
             {
                 return;
             }
@@ -126,6 +127,8 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(false);
                 _orbwalker.SetMovement(false);
+                if(_Menu.Item("motion.katarina.misc.kswhileult").GetValue<bool>())
+                    Killsteal();
                 return;
             }
             _orbwalker.SetAttack(true);
