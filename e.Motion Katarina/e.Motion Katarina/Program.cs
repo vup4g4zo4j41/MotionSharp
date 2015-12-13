@@ -323,6 +323,7 @@ namespace e.Motion_Katarina{
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.E);
             }
 <<<<<<< HEAD
+<<<<<<< HEAD
             if (damage >= target.Health)
                 return 1;
             if (damage < target.Health && usef && F.Range != 0 && F.IsReady())
@@ -335,6 +336,9 @@ namespace e.Motion_Katarina{
             
             
 
+=======
+            return damage >= target.Health;
+>>>>>>> parent of 54e126f... Fixed Damagetype
 =======
             return damage >= target.Health;
 >>>>>>> parent of 54e126f... Fixed Damagetype
@@ -363,8 +367,12 @@ namespace e.Motion_Katarina{
                     return;
                 }
 <<<<<<< HEAD
+<<<<<<< HEAD
                 int killable = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(), _menu.Item("motion.katarina.killsteal.usef").GetValue<bool>());
                 if (killable==1 || killable == 2 && enemy.IsValidTarget(675))
+=======
+                if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(675))
+>>>>>>> parent of 54e126f... Fixed Damagetype
 =======
                 if (CanKill(enemy, _Menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _Menu.Item("motion.katarina.killsteal.usee").GetValue<bool>()) && enemy.IsValidTarget(675))
 >>>>>>> parent of 54e126f... Fixed Damagetype
@@ -381,8 +389,12 @@ namespace e.Motion_Katarina{
                 }
                 //KS with Wardjump
 <<<<<<< HEAD
+<<<<<<< HEAD
                 killable = CanKill(enemy, true, false, false, _menu.Item("motion.katarina.killsteal.usee").GetValue<bool>());
                 if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && killable==1 || killable == 2 && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
+=======
+                if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
+>>>>>>> parent of 54e126f... Fixed Damagetype
 =======
                 if (_Menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false) && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
 >>>>>>> parent of 54e126f... Fixed Damagetype
