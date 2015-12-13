@@ -196,7 +196,11 @@ namespace e.Motion_Katarina{
                     _orbwalker.SetMovement(false);
                     whenToCancelR = Utils.GameTimeTickCount + 400;
                 }
-                if (_menu.Item("motion.katarina.Combo.usee").GetValue<bool>() && E.IsReady() && target.IsValidTarget(E.Range) && (!R.IsReady() || !_menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375) && W.IsReady() || R.IsReady() || target != qTarget))
+                if (_menu.Item("motion.katarina.Combo.usee").GetValue<bool>() 
+                    && E.IsReady() 
+                    && target.IsValidTarget(E.Range) 
+                    && (!R.IsReady() || !_menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)) 
+                    && (W.IsReady() || R.IsReady() || target != qTarget))
                 {
                     E.Cast(target);
                 }
@@ -311,12 +315,12 @@ namespace e.Motion_Katarina{
         static int CanKill(Obj_AI_Hero target, bool useq, bool usew, bool usee, bool usef)
         {
             double damage = 0;
-            if (!useq && !usew && !usee)
+            if (!useq && !usew && !usee &&!usef)
                 return 0;
             if (Q.IsReady() && useq)
             {
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q);
-                if (W.IsReady() && usew || E.IsReady() && usee)
+                if (W.IsReady() && usew || (E.IsReady() && usee))
                 {
                     damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
                 }
@@ -376,7 +380,7 @@ namespace e.Motion_Katarina{
                         F.Cast(enemy);
                     if (Q.IsReady())
                         Q.Cast(enemy);
-                    if (E.IsReady() && W.IsReady() || qTarget != enemy)
+                    if (E.IsReady() && (W.IsReady() || qTarget != enemy))
                         E.Cast(enemy);
                     if (W.IsReady() && enemy.IsValidTarget(390) && qTarget != enemy)
                         W.Cast();
@@ -404,7 +408,7 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || _menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active && target != qTarget)
+            if (target != null && (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || _menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>()) && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active && target != qTarget)
             {
                 if (Q.IsReady())
                     Q.Cast(target);
