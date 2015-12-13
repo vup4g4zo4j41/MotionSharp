@@ -338,7 +338,7 @@ namespace e.Motion_Katarina{
             {
                 return 1;
             }
-            if (usef && hasF)
+            if (usef && hasF && F.IsReady())
             {
                 damage += F.GetDamage(Player);
                 damage -= target.HPRegenRate*2.5;
@@ -384,7 +384,7 @@ namespace e.Motion_Katarina{
                 }
                 //KS with Wardjump
                 cankill = CanKill(enemy, true, false, false,_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>());
-                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && cankill ==1 || cankill ==2 && hasF  && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
+                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && (cankill ==1 || cankill ==2) && hasF && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
                 {
                     WardJump(enemy.Position, false);
                     if (enemy.IsValidTarget(F.Range))
