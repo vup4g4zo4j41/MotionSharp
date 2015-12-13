@@ -17,6 +17,7 @@ namespace e.Motion_Katarina{
         private static Obj_AI_Hero qTarget;
         private static readonly Obj_AI_Hero[] AllEnemy = HeroManager.Enemies.ToArray();
         private static bool WardJumpReady;
+        private static bool hasF;
         #endregion
 
 
@@ -32,16 +33,19 @@ namespace e.Motion_Katarina{
             W = new Spell(SpellSlot.W, 375, TargetSelector.DamageType.Magical);
             E = new Spell(SpellSlot.E, 700, TargetSelector.DamageType.Magical);
             R = new Spell(SpellSlot.R, 550, TargetSelector.DamageType.Magical);
-            F = new Spell(SpellSlot.Summoner1, 0 , TargetSelector.DamageType.True);
             //Get Ignite
             if (Player.Spellbook.GetSpell(SpellSlot.Summoner1).Name.Contains("summonerdot"))
-                F.Range = 600;
+            {
+                F = new Spell(SpellSlot.Summoner1, 600, TargetSelector.DamageType.True);
+                hasF = true;
+            }
             if (Player.Spellbook.GetSpell(SpellSlot.Summoner2).Name.Contains("summonerdot"))
             {
                 F = new Spell(SpellSlot.Summoner2, 600, TargetSelector.DamageType.True);
+                hasF = true;
             }
-                
-            
+
+
             #endregion
 
             Utility.HpBarDamageIndicator.Enabled = true;
@@ -77,6 +81,7 @@ namespace e.Motion_Katarina{
             ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.useq", "Use Q").SetValue(true));
             ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usew", "Use W").SetValue(true));
             ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usee", "Use E").SetValue(true));
+            ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.usef", "Use Ignite").SetValue(true));
             ksMenu.AddItem(new MenuItem("motion.katarina.killsteal.wardjump", "KS with Wardjump").SetValue(true));
             _menu.AddSubMenu(ksMenu);
 
@@ -172,7 +177,7 @@ namespace e.Motion_Katarina{
         {
             if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
                 return;
-            Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
             if(target != null && !target.IsZombie)
             {
                 if(_menu.Item("motion.katarina.Combo.useq").GetValue<bool>() && Q.IsReady() && target.IsValidTarget(Q.Range))
@@ -329,11 +334,16 @@ namespace e.Motion_Katarina{
             {
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.E);
             }
-            if (damage < target.Health)
+            if (damage >= target.Health)
             {
-                
+                return 1;
             }
-            return damage >= target.Health? 0 : 1;
+            if (usef && hasF)
+            {
+                damage += F.GetDamage(Player);
+                damage -= target.HPRegenRate*2.5;
+            }
+            return damage >= target.Health? 2 : 0;
 
         }
 
@@ -359,8 +369,11 @@ namespace e.Motion_Katarina{
                     qTarget = enemy;
                     return;
                 }
-                if (CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(), _menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), _menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(), true)==1 && enemy.IsValidTarget(675))
+                int cankill = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>() && hasF);
+                if ( cankill==1 || cankill == 2 && enemy.IsValidTarget(675))
                 {
+                    if (cankill == 2 && Player.IsValidTarget(F.Range))
+                        F.Cast(enemy);
                     if (Q.IsReady())
                         Q.Cast(enemy);
                     if (E.IsReady() && W.IsReady() || qTarget != enemy)
@@ -370,9 +383,14 @@ namespace e.Motion_Katarina{
                     return;
                 }
                 //KS with Wardjump
-                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && CanKill(enemy, true, false, false, true)==1 && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
+                cankill = CanKill(enemy, true, false, false,_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>());
+                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && cankill ==1 || cankill ==2 && hasF  && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
                 {
                     WardJump(enemy.Position, false);
+                    if (enemy.IsValidTarget(F.Range))
+                    {
+                        F.Cast(enemy);
+                    }
                     if (enemy.IsValidTarget(675))
                         Q.Cast(enemy);
                     return;
@@ -386,7 +404,7 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active) && target != qTarget)
+            if (target != null && _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || _menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active && target != qTarget)
             {
                 if (Q.IsReady())
                     Q.Cast(target);
