@@ -162,7 +162,7 @@ namespace e.Motion_Katarina{
 
         static bool HasRBuff()
         {
-            return (Player.HasBuff("KatarinaR") || Player.IsChannelingImportantSpell() || Player.HasBuff("katarinarsound"));
+            return Player.HasBuff("KatarinaR") || Player.IsChannelingImportantSpell() || Player.HasBuff("katarinarsound");
         }
 
 
@@ -185,7 +185,7 @@ namespace e.Motion_Katarina{
                     Q.Cast(target);
                     qTarget = target;
                 }
-                if (_menu.Item("motion.katarina.Combo.usew").GetValue<bool>() && W.IsReady() && target.IsValidTarget(W.Range - 10) && target != qTarget)
+                if (_menu.Item("motion.katarina.Combo.usew").GetValue<bool>() && W.IsReady() && target.IsValidTarget(W.Range - 10) && (target != qTarget || (R.IsReady() && _menu.Item("motion.katarina.Combo.user").GetValue<bool>())))
                 {
                     W.Cast(target);
                 }
