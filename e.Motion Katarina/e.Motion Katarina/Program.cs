@@ -374,10 +374,15 @@ namespace e.Motion_Katarina{
                     return;
                 }
                 int cankill = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>() && hasF);
-                if (( cankill==1 || cankill == 2) && enemy.IsValidTarget(675))
+                if (cankill == 1 || cankill == 2)
                 {
-                    if (cankill == 2 && Player.IsValidTarget(F.Range))
-                        F.Cast(enemy);
+                    //Game.PrintChat("code reached 1");
+                }
+                if (( cankill==1 || cankill == 2) && enemy.IsValidTarget(Q.Range))
+                {
+                    Game.PrintChat("code reached 2");
+                    //if (cankill == 2 && Player.IsValidTarget(F.Range))
+                    //    F.Cast(enemy);
                     if (Q.IsReady())
                         Q.Cast(enemy);
                     if (E.IsReady() && (W.IsReady() || qTarget != enemy))
@@ -391,10 +396,6 @@ namespace e.Motion_Katarina{
                 if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && (cankill ==1 || cankill ==2) && hasF && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
                 {
                     WardJump(enemy.Position, false);
-                    if (enemy.IsValidTarget(F.Range))
-                    {
-                        F.Cast(enemy);
-                    }
                     if (enemy.IsValidTarget(675))
                         Q.Cast(enemy);
                     return;
