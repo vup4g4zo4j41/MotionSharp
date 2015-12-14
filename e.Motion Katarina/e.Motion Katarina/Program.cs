@@ -224,7 +224,7 @@ namespace e.Motion_Katarina{
 
         static void Demark()
         {
-            if (qTarget!=null && qTarget.HasBuff("katarinaqmark") || Q.Cooldown < 3)
+            if ((qTarget!=null && qTarget.HasBuff("katarinaqmark")) || Q.Cooldown < 3)
             {
                 qTarget = null;
             }
@@ -320,7 +320,7 @@ namespace e.Motion_Katarina{
             if (Q.IsReady() && useq)
             {
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q);
-                if (W.IsReady() && usew || (E.IsReady() && usee))
+                if ((W.IsReady() && usew) || (E.IsReady() && usee))
                 {
                     damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
                 }
@@ -374,7 +374,7 @@ namespace e.Motion_Katarina{
                     return;
                 }
                 int cankill = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>() && hasF);
-                if ( cankill==1 || cankill == 2 && enemy.IsValidTarget(675))
+                if (( cankill==1 || cankill == 2) && enemy.IsValidTarget(675))
                 {
                     if (cankill == 2 && Player.IsValidTarget(F.Range))
                         F.Cast(enemy);
