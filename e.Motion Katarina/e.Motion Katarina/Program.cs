@@ -9,7 +9,7 @@ namespace e.Motion_Katarina{
     class Program {
 
         #region Declaration
-        private static Spell Q, W, E, R, F;
+        private static Spell Q, W, E, R;
         private static Orbwalking.Orbwalker _orbwalker;
         private static Menu _menu;
         private static int whenToCancelR;
@@ -17,7 +17,7 @@ namespace e.Motion_Katarina{
         private static Obj_AI_Hero qTarget;
         private static readonly Obj_AI_Hero[] AllEnemy = HeroManager.Enemies.ToArray();
         private static bool WardJumpReady;
-        private static bool hasF;
+        private static SpellSlot IgniteSpellSlot;
         #endregion
 
 
@@ -36,13 +36,11 @@ namespace e.Motion_Katarina{
             //Get Ignite
             if (Player.Spellbook.GetSpell(SpellSlot.Summoner1).Name.Contains("summonerdot"))
             {
-                F = new Spell(SpellSlot.Summoner1, 600, TargetSelector.DamageType.True);
-                hasF = true;
+                IgniteSpellSlot = SpellSlot.Summoner1;
             }
             if (Player.Spellbook.GetSpell(SpellSlot.Summoner2).Name.Contains("summonerdot"))
             {
-                F = new Spell(SpellSlot.Summoner2, 600, TargetSelector.DamageType.True);
-                hasF = true;
+                IgniteSpellSlot = SpellSlot.Summoner2;
             }
 
 
@@ -75,6 +73,27 @@ namespace e.Motion_Katarina{
             harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass").SetValue(true));
             harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
             _menu.AddSubMenu(harassMenu);
+            
+            //Laneclear-Menü
+            Menu laneclear = new Menu("Laneclear", "motion.katarina.laneclear");
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.useq", "Use Q").SetValue(true));
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.usew", "Use W").SetValue(true));
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.minw", "Minimum Minions to use W").SetValue(new Slider(3,1,6)));
+            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.minwlasthit", "Minimum Minions to Lasthit with W").SetValue(new Slider(2, 0, 6)));
+            _menu.AddSubMenu(laneclear);
+
+            //Jungleclear-Menü
+            Menu jungleclear = new Menu("Jungleclear", "motion.katarina.jungleclear");
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.useq", "Use Q").SetValue(true));
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usew", "Use W").SetValue(true));
+            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usee", "Use E").SetValue(true));
+            _menu.AddSubMenu(jungleclear);
+
+            //Lasthit-Menü
+            Menu lasthit = new Menu("Lasthit", "motion.katarina.lasthit");
+            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.useq", "Use Q").SetValue(true));
+            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usew", "Use W").SetValue(true));
+            _menu.AddSubMenu(lasthit);
 
             //KS-Menü
             Menu ksMenu = new Menu("Killsteal", "motion.katarina.killsteal");
@@ -86,32 +105,12 @@ namespace e.Motion_Katarina{
             _menu.AddSubMenu(ksMenu);
 
             //Misc-Menü
-            Menu miscMenu = new Menu("Miscellanious","motion.katarina.misc");
+            Menu miscMenu = new Menu("Miscellanious", "motion.katarina.misc");
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.noRCancel", "Prevent R Cancel").SetValue(true).SetTooltip("This is preventing you from cancelling R accidentally within the first 0.4 seconds of cast"));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.kswhileult", "Do Killsteal while Ulting").SetValue(true));
             _menu.AddSubMenu(miscMenu);
-
-            //Lasthit-Menü
-            Menu lasthit = new Menu("Lasthit", "motion.katarina.lasthit");
-            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.useq", "Use Q").SetValue(true));
-            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usew", "Use W").SetValue(true));
-            _menu.AddSubMenu(lasthit);
-
-            //Laneclear-Menü
-            Menu laneclear = new Menu("Laneclear", "motion.katarina.laneclear");
-            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.useq", "Use Q").SetValue(true));
-            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.usew", "Use W").SetValue(true));
-            laneclear.AddItem(new MenuItem("motion.katarina.laneclear.minw", "Minimum Minions to use W").SetValue(new Slider(3,1,6)));
-            _menu.AddSubMenu(laneclear);
-
-            //Jungleclear-Menü
-            Menu jungleclear = new Menu("Jungleclear", "motion.katarina.jungleclear");
-            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.useq", "Use Q").SetValue(true));
-            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usew", "Use W").SetValue(true));
-            jungleclear.AddItem(new MenuItem("motion.katarina.jungleclear.usee", "Use E").SetValue(true));
-            _menu.AddSubMenu(jungleclear);
 
             //alles zum Hauptmenü hinzufügen
             _menu.AddToMainMenu();
@@ -308,6 +307,11 @@ namespace e.Motion_Katarina{
             {
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.R);
             }
+            if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0)
+            {
+                damage += Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+                damage -= target.HPRegenRate*2.5;
+            }
             return (float)damage;
         }
 
@@ -342,9 +346,9 @@ namespace e.Motion_Katarina{
             {
                 return 1;
             }
-            if (usef && hasF && F.IsReady())
+            if (Player.GetSummonerSpellDamage(target,Damage.SummonerSpell.Ignite) > 0 && !target.HasBuff("summonerdot") && !HasRBuff())
             {
-                damage += F.GetDamage(Player);
+                damage += Player.GetSummonerSpellDamage(target,Damage.SummonerSpell.Ignite);
                 damage -= target.HPRegenRate*2.5;
             }
             return damage >= target.Health? 2 : 0;
@@ -373,16 +377,11 @@ namespace e.Motion_Katarina{
                     qTarget = enemy;
                     return;
                 }
-                int cankill = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>() && hasF);
-                if (cankill == 1 || cankill == 2)
-                {
-                    //Game.PrintChat("code reached 1");
-                }
+                int cankill = CanKill(enemy, _menu.Item("motion.katarina.killsteal.useq").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usee").GetValue<bool>(),_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>());
                 if (( cankill==1 || cankill == 2) && enemy.IsValidTarget(Q.Range))
                 {
-                    Game.PrintChat("code reached 2");
-                    //if (cankill == 2 && Player.IsValidTarget(F.Range))
-                    //    F.Cast(enemy);
+                    if (cankill == 2 && enemy.IsValidTarget(600))
+                        Player.Spellbook.CastSpell(IgniteSpellSlot,enemy);
                     if (Q.IsReady())
                         Q.Cast(enemy);
                     if (E.IsReady() && (W.IsReady() || qTarget != enemy))
@@ -393,9 +392,11 @@ namespace e.Motion_Katarina{
                 }
                 //KS with Wardjump
                 cankill = CanKill(enemy, true, false, false,_menu.Item("motion.katarina.killsteal.usef").GetValue<bool>());
-                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && (cankill ==1 || cankill ==2) && hasF && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
+                if (_menu.Item("motion.katarina.killsteal.wardjump").GetValue<bool>() && (cankill ==1 || cankill ==2) && enemy.IsValidTarget(1300) && Q.IsReady() && E.IsReady())
                 {
                     WardJump(enemy.Position, false);
+                    if (cankill == 2 && enemy.IsValidTarget(600))
+                        Player.Spellbook.CastSpell(IgniteSpellSlot, enemy);
                     if (enemy.IsValidTarget(675))
                         Q.Cast(enemy);
                     return;
@@ -409,7 +410,7 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || _menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>()) && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active && target != qTarget)
+            if (target != null && (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active)) && target != qTarget)
             {
                 if (Q.IsReady())
                     Q.Cast(target);
@@ -431,15 +432,7 @@ namespace e.Motion_Katarina{
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
                 //Only Cast W when minion is not killable with Autoattacks
-                if (sourroundingMinions.Any(minion => !minion.IsDead
-                                                      &&
-                                                      HealthPrediction.GetHealthPrediction(minion,
-                                                          (Player.CanAttack
-                                                              ? Utils.GameTimeTickCount + 25 + Game.Ping/2
-                                                              : Orbwalking.LastAATick + (int) Player.AttackDelay*1000) +
-                                                          (int) Player.AttackCastDelay*1000) <= 0
-                                                      && _orbwalker.GetTarget() != minion
-                                                      && W.GetDamage(minion) > minion.Health))
+                if (sourroundingMinions.Any(minion => !minion.IsDead && HealthPrediction.GetHealthPrediction(minion, (Player.CanAttack ? Utils.GameTimeTickCount + 25 + Game.Ping/2 : Orbwalking.LastAATick + (int) Player.AttackDelay*1000) + (int) Player.AttackCastDelay*1000) <= 0 && _orbwalker.GetTarget() != minion && W.GetDamage(minion) > minion.Health))
                 {
                     W.Cast();
                 }
@@ -467,7 +460,11 @@ namespace e.Motion_Katarina{
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, W.Range - 5).ToArray();
                 if (sourroundingMinions.GetLength(0) >= _menu.Item("motion.katarina.laneclear.minw").GetValue<Slider>().Value)
                 {
-                    W.Cast();
+                    int lasthittable = sourroundingMinions.Count(minion => W.GetDamage(minion) + (minion.HasBuff("katarinaqmark")? Q.GetDamage(minion,1) : 0) > minion.Health);
+                    if (lasthittable >= _menu.Item("motion.katarina.laneclear.minwlasthit").GetValue<Slider>().Value)
+                    {
+                        W.Cast();
+                    }
                 }
             }
             if (_menu.Item("motion.katarina.laneclear.useq").GetValue<bool>() && Q.IsReady())
@@ -492,9 +489,19 @@ namespace e.Motion_Katarina{
             if (_menu.Item("motion.katarina.jungleclear.useq").GetValue<bool>() && Q.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, Q.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                float maxhealth = 0;
+                int chosenminion = 0;
                 if (sourroundingMinions.GetLength(0) >= 1)
                 {
-                    Q.Cast(sourroundingMinions[0]);
+                    for(int i = 0;i < sourroundingMinions.Length; i++)
+                    {
+                        if (maxhealth < sourroundingMinions[i].MaxHealth)
+                        {
+                            maxhealth = sourroundingMinions[i].MaxHealth;
+                            chosenminion = i;
+                        }
+                    }
+                    Q.Cast(sourroundingMinions[chosenminion]);
                 }
             }
             if (_menu.Item("motion.katarina.jungleclear.usew").GetValue<bool>() && W.IsReady())
@@ -508,9 +515,19 @@ namespace e.Motion_Katarina{
             if (_menu.Item("motion.katarina.jungleclear.usee").GetValue<bool>() && E.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, E.Range, MinionTypes.All, MinionTeam.Neutral).ToArray();
+                float maxhealth = 0;
+                int chosenminion = 0;
                 if (sourroundingMinions.GetLength(0) >= 1)
                 {
-                    E.Cast(sourroundingMinions[0]);
+                    for (int i = 0; i < sourroundingMinions.Length; i++)
+                    {
+                        if (maxhealth < sourroundingMinions[i].MaxHealth)
+                        {
+                            maxhealth = sourroundingMinions[i].MaxHealth;
+                            chosenminion = i;
+                        }
+                    }
+                    E.Cast(sourroundingMinions[chosenminion]);
                 }
             }
         }
