@@ -110,6 +110,7 @@ namespace e.Motion_Katarina{
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.noRCancel", "Prevent R Cancel").SetValue(true).SetTooltip("This is preventing you from cancelling R accidentally within the first 0.4 seconds of cast"));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.kswhileult", "Do Killsteal while Ulting").SetValue(true));
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.supersecret", "Super Secret Feature").SetTooltip("Soon(TM)"));
             _menu.AddSubMenu(miscMenu);
 
             //alles zum Hauptmenü hinzufügen
