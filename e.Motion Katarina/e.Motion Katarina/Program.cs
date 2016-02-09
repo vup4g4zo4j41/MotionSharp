@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
-using System.Runtime.CompilerServices;
-using System.Security.Authentication.ExtendedProtection;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
@@ -136,7 +133,7 @@ namespace e.Motion_Katarina{
             lasthit.AddItem(new MenuItem("motion.katarina.lasthit.useq", "Use Q").SetValue(true));
             lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usew", "Use W").SetValue(true).SetTooltip("Advanced Calculation may cause FPS-Drops"));
             lasthit.AddItem(new MenuItem("motion.katarina.lasthit.usee", "Use E").SetValue(false).SetTooltip("Advanced Calculation may cause FPS-Drops"));
-            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.type", "Lasthit Algorithm").SetValue(new StringList(new[] {"Advanced", "Lightweight"})));
+            lasthit.AddItem(new MenuItem("motion.katarina.lasthit.type", "Lasthit Algorithm").SetValue(new StringList(new[] {"Advanced", "Lightweight", "Lightweight and Advanced"})));
             _menu.AddSubMenu(lasthit);
 
             //KS-Menü
@@ -624,9 +621,10 @@ namespace e.Motion_Katarina{
             Obj_AI_Base[] sourroundingMinions;
             if (_menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() && W.IsReady())
             {
+                sourroundingMinions = MinionManager.GetMinions(Player.Position, 390).ToArray();
                 if (_menu.Item("motion.katarina.lasthit.type").GetValue<StringList>().SelectedIndex == 0)
                 {
-                    sourroundingMinions = MinionManager.GetMinions(Player.Position, 390).ToArray();
+                    
                     //Only Cast W when minion is not killable with Autoattacks
                     if (
                         sourroundingMinions.Any(
@@ -642,11 +640,21 @@ namespace e.Motion_Katarina{
                         W.Cast();
                     }
                 }
-                else
+                else if (_menu.Item("motion.katarina.lasthit.type").GetValue<StringList>().SelectedIndex == 1)
                 {
-                    sourroundingMinions = MinionManager.GetMinions(Player.Position, 390).ToArray();
                     if (sourroundingMinions.Any(minion => !minion.IsDead && W.GetDamage(minion) > minion.Health))
                         W.Cast();
+                }
+                else
+                {
+                    if(!sourroundingMinions[0].IsDead && W.GetDamage(sourroundingMinions[0]) > sourroundingMinions[0].Health && _orbwalker.GetTarget() != sourroundingMinions[0] && HealthPrediction.GetHealthPrediction(sourroundingMinions[0],
+                                    (Player.CanAttack
+                                        ? Game.Ping / 2
+                                        : Orbwalking.LastAATick - Utils.GameTimeTickCount +
+                                          (int)Player.AttackDelay * 1000) + 300 + (int)Player.AttackCastDelay * 1000) <= 0)
+                    {
+                        W.Cast();
+                    }
                 }
 
             }
@@ -685,12 +693,32 @@ namespace e.Motion_Katarina{
                         break;
                     }
                 }
-                else
+                else if (_menu.Item("motion.katarina.lasthit.type").GetValue<StringList>().SelectedIndex == 1)
                 {
-                    foreach (var minions in sourroundingMinions.Where(minion => !minion.IsDead && E.GetDamage(minion) >= minion.Health && !IsTurretPosition(Player.Position.Extend(minion.Position,Player.Position.Distance(minion.Position) + 35)) && (W.IsReady()|| _menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() || Player.Position.Distance(minion.Position)>390)))
+                    foreach (
+                        var minions in
+                            sourroundingMinions.Where(
+                                minion =>
+                                    !minion.IsDead && E.GetDamage(minion) >= minion.Health &&
+                                    !IsTurretPosition(Player.Position.Extend(minion.Position,
+                                        Player.Position.Distance(minion.Position) + 35)) &&
+                                    (W.IsReady() || _menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() ||
+                                     Player.Position.Distance(minion.Position) > 390)))
                     {
                         E.Cast(minions);
                         break;
+                    }
+                }
+                else
+                {
+                    if (!sourroundingMinions[0].IsDead &&
+                        E.GetDamage(sourroundingMinions[0]) >= sourroundingMinions[0].Health &&
+                        !IsTurretPosition(Player.Position.Extend(sourroundingMinions[0].Position,
+                            Player.Position.Distance(sourroundingMinions[0].Position) + 35)) &&
+                        (W.IsReady() || _menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() ||
+                         Player.Position.Distance(sourroundingMinions[0].Position) > 390))
+                    {
+                        E.Cast(sourroundingMinions[0]);
                     }
                 }
             }
