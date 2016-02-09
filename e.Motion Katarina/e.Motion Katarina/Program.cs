@@ -209,7 +209,7 @@ namespace e.Motion_Katarina{
             if (sender.IsMe && args.Buff.Name == "BlindMonkQOne")
             {
 
-                Game.PrintChat("Player lost Lee Sin Q Buff");
+                //Game.PrintChat("Player lost Lee Sin Q Buff");
                 lastLeeQTick = Utils.TickCount;
             }
         }
@@ -344,7 +344,7 @@ namespace e.Motion_Katarina{
 
                 if (lastLeeQTick - Utils.TickCount <= 10)
                 {
-                    Game.PrintChat("Trying to Jump undeder Ally Turret - OnProcessSpellCast");
+                    //Game.PrintChat("Trying to Jump undeder Ally Turret - OnProcessSpellCast");
                     JumpUnderTurret(-100,sender.Position);
                 }
                 lastLeeQTick = Utils.TickCount;
@@ -393,10 +393,8 @@ namespace e.Motion_Katarina{
                     
                 }
             }
-            Game.PrintChat("check-1");
             if (turretToJump != null && !TurretHasAggro[turretToJump.NetworkId] && Player.Position.Distance(turretToJump.Position) < 1500)
             {
-                Game.PrintChat("check0");
                 int i = 0;
                 
                 do
@@ -404,14 +402,10 @@ namespace e.Motion_Katarina{
                     Vector3 extPos = Player.Position.Extend(turretToJump.Position, 685 - i);
                     float dist = objectPosition.Distance(extPos + extrarange);
                     Vector3 predictedPosition = objectPosition.Extend(extPos, dist);
-                    Game.PrintChat("check1");
                     if (predictedPosition.Distance(turretToJump.Position) <= 890 && !predictedPosition.IsWall())
                     {
-                        Game.PrintChat("check2");
                         WardJump(Player.Position.Extend(turretToJump.Position, 650 - i), false);
-                        Game.PrintChat("check3");
                         JumpPosition = Player.Position.Extend(turretToJump.Position, 650 - i);
-                        Game.PrintChat("check4");
                         ShallJumpNow = true;
                         break;
                     }
