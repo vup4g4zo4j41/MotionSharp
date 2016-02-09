@@ -647,7 +647,7 @@ namespace e.Motion_Katarina{
                 }
                 else
                 {
-                    if(!sourroundingMinions[0].IsDead && W.GetDamage(sourroundingMinions[0]) > sourroundingMinions[0].Health && _orbwalker.GetTarget() != sourroundingMinions[0] && HealthPrediction.GetHealthPrediction(sourroundingMinions[0],
+                    if(sourroundingMinions[0] != null && !sourroundingMinions[0].IsDead && W.GetDamage(sourroundingMinions[0]) > sourroundingMinions[0].Health && _orbwalker.GetTarget() != sourroundingMinions[0] && HealthPrediction.GetHealthPrediction(sourroundingMinions[0],
                                     (Player.CanAttack
                                         ? Game.Ping / 2
                                         : Orbwalking.LastAATick - Utils.GameTimeTickCount +
@@ -711,7 +711,7 @@ namespace e.Motion_Katarina{
                 }
                 else
                 {
-                    if (!sourroundingMinions[0].IsDead &&
+                    if (sourroundingMinions[0] != null && !sourroundingMinions[0].IsDead &&
                         E.GetDamage(sourroundingMinions[0]) >= sourroundingMinions[0].Health &&
                         !IsTurretPosition(Player.Position.Extend(sourroundingMinions[0].Position,
                             Player.Position.Distance(sourroundingMinions[0].Position) + 35)) &&
