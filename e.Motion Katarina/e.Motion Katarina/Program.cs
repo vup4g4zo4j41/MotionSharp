@@ -109,8 +109,12 @@ namespace e.Motion_Katarina{
             Menu harassMenu = new Menu("Harass", "motion.katarina.harrass");
             harassMenu.AddItem(new MenuItem("motion.katarina.harrass.useq", "Use Q").SetValue(true));
             harassMenu.AddItem(new MenuItem("motion.katarina.harrass.usew", "Use W").SetValue(true));
-            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass", "Automatic Harrass").SetValue(true));
-            harassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrasskey","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
+            Menu autoHarassMenu = new Menu("Autoharass","motion.katarina.autoharrass");
+            autoHarassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass.toggle", "Automatic Harrass").SetValue(true));
+            autoHarassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass.key","Toogle Harrass").SetValue(new KeyBind("N".ToCharArray()[0], KeyBindType.Toggle)));
+            autoHarassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass.usew", "Use W").SetValue(true));
+            autoHarassMenu.AddItem(new MenuItem("motion.katarina.harrass.autoharrass.useq", "Use Q").SetValue(false));
+            harassMenu.AddSubMenu(autoHarassMenu);
             _menu.AddSubMenu(harassMenu);
             
             //Laneclear-Menü
@@ -293,6 +297,13 @@ namespace e.Motion_Katarina{
                 {
                     W.Cast(target);
                 }
+                if (_menu.Item("motion.katarina.Combo.usee").GetValue<bool>() 
+                    && E.IsReady() 
+                    && target.IsValidTarget(E.Range) 
+                    && (W.IsReady() || R.IsReady() || target != qTarget))
+                {
+                    E.Cast(target);
+                }
                 if (_menu.Item("motion.katarina.Combo.user").GetValue<bool>() && R.IsReady() && target.IsValidTarget(375))
                 {
                     R.Cast();
@@ -300,14 +311,7 @@ namespace e.Motion_Katarina{
                     _orbwalker.SetMovement(false);
                     whenToCancelR = Utils.GameTimeTickCount + 400;
                 }
-                if (_menu.Item("motion.katarina.Combo.usee").GetValue<bool>() 
-                    && E.IsReady() 
-                    && target.IsValidTarget(E.Range) 
-                    && (!R.IsReady() || !_menu.Item("motion.katarina.Combo.user").GetValue<bool>() || !target.IsValidTarget(375)) 
-                    && (W.IsReady() || R.IsReady() || target != qTarget))
-                {
-                    E.Cast(target);
-                }
+
             }
         }
 
@@ -601,12 +605,24 @@ namespace e.Motion_Katarina{
         private static void Harass()
         {
             Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Magical);
-            if (target != null && (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed || (_menu.Item("motion.katarina.harrass.autoharrass").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrasskey").GetValue<KeyBind>().Active)) && target != qTarget)
+            //Q-Logic
+            if ((_menu.Item("motion.katarina.harrass.autoharrass.toggle").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrass.key").GetValue<KeyBind>().Active
+                && _menu.Item("motion.katarina.harrass.autoharrass.useq").GetValue<bool>()
+                || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && _menu.Item("motion.katarina.harrass.useq").GetValue<bool>())
+                && target != null && Q.IsReady())
             {
-                if (Q.IsReady())
-                    Q.Cast(target);
-                if (W.IsReady() && null != TargetSelector.GetTarget(W.Range - 10, TargetSelector.DamageType.Magical))
-                    W.Cast();
+                Q.Cast(target);
+                qTarget = target; 
+            }
+            //Q-Logic
+            target = HeroManager.Enemies.FirstOrDefault(hero => !hero.IsDead && hero.Distance(Player) <390);
+                
+            if ((_menu.Item("motion.katarina.harrass.autoharrass.toggle").GetValue<bool>() && _menu.Item("motion.katarina.harrass.autoharrass.key").GetValue<KeyBind>().Active
+                && _menu.Item("motion.katarina.harrass.autoharrass.usew").GetValue<bool>()
+                || _orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed && _menu.Item("motion.katarina.harrass.usew").GetValue<bool>())
+                && target != null && Player.Distance(target) < 390 && target != qTarget)
+            {
+                W.Cast();
             }
         }
 
