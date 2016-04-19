@@ -238,7 +238,7 @@ namespace e.Motion_Katarina{
                 _orbwalker.SetAttack(false);
                 _orbwalker.SetMovement(false);
                 if (_menu.Item("motion.katarina.misc.cancelR").GetValue<bool>() && Player.GetEnemiesInRange(R.Range + 50).Count == 0)
-                    Player.IssueOrder(GameObjectOrder.Stop, Player);
+                    Player.IssueOrder(GameObjectOrder.MoveTo, Game.CursorPos);
                 if (_menu.Item("motion.katarina.misc.kswhileult").GetValue<bool>())
                     Killsteal();
                 return;
@@ -260,7 +260,7 @@ namespace e.Motion_Katarina{
                 Combo(Q.IsReady() && _menu.Item("motion.katarina.combo.useq").GetValue<bool>(), W.IsReady() && _menu.Item("motion.katarina.combo.usew").GetValue<bool>(), E.IsReady() && _menu.Item("motion.katarina.combo.usee").GetValue<bool>(), R.IsReady() && _menu.Item("motion.katarina.combo.user").GetValue<bool>());
             //Harass
             if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
-                Combo(Q.IsReady() && _menu.Item("motion.katarina.harass.useq").GetValue<bool>(), W.IsReady() && _menu.Item("motion.katarina.harass.useW").GetValue<bool>(), false, false, true);
+                Combo(Q.IsReady() && _menu.Item("motion.katarina.harass.useq").GetValue<bool>(), W.IsReady() && _menu.Item("motion.katarina.harass.usew").GetValue<bool>(), false, false, true);
             //Autoharass
             if (_menu.Item("motion.katarina.harass.autoharass.toggle").GetValue<bool>() && _menu.Item("motion.katarina.harass.autoharass.key").GetValue<KeyBind>().Active)
                 Combo(Q.IsReady() && _menu.Item("motion.katarina.harass.autoharass.useq").GetValue<bool>(), W.IsReady() && _menu.Item("motion.katarina.harass.autoharass.usew").GetValue<bool>(), false, false, true);
@@ -552,9 +552,8 @@ namespace e.Motion_Katarina{
                 {
                     damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
                 }
-
             }
-            if (target.HasBuff("katarinaqmark"))
+            if (target.HasBuff("katarinaqmark") || target == qTarget)
             {
                 damage += ObjectManager.Player.GetSpellDamage(target, SpellSlot.Q, 1);
             }
