@@ -336,7 +336,7 @@ namespace e.Motion_Katarina{
                     W.Cast();
                     return;
                 }
-                if (target.Distance(Player) < R.Range - 200)
+                if (target.Distance(Player) < R.Range - 200 && user)
                 {
                     R.Cast();
                 }
@@ -583,8 +583,9 @@ namespace e.Motion_Katarina{
         {
             foreach (Obj_AI_Hero enemy in AllEnemy)
             {
-                if (enemy == null)
+                if (enemy == null || enemy.HasBuffOfType(BuffType.Invulnerability))
                     return;
+                
                 if (CanKill(enemy, false, _menu.Item("motion.katarina.killsteal.usew").GetValue<bool>(), false, false)==1 && enemy.IsValidTarget(390))
                 {
                     W.Cast(enemy);
