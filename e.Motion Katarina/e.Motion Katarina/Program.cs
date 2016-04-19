@@ -169,8 +169,10 @@ namespace e.Motion_Katarina{
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjump", "Use Wardjump").SetValue(true));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.wardjumpkey", "Wardjump Key").SetValue(new KeyBind("Z".ToCharArray()[0], KeyBindType.Press)));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.noRCancel", "Prevent R Cancel").SetValue(true).SetTooltip("This is preventing you from cancelling R accidentally within the first 0.4 seconds of cast"));
+            miscMenu.AddItem(new MenuItem("motion.katarina.misc.cancelR", "Cancel R when no Enemies are around").SetValue(false));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.kswhileult", "Do Killsteal while Ulting").SetValue(true));
             miscMenu.AddItem(new MenuItem("motion.katarina.misc.allyTurret", "Jump unter Turret for Gapcloser").SetTooltip("Try to Jump under Ally Turret when enemy tries to Gapclose you").SetValue(true));
+            
             Menu performanceMenu = new Menu("Performance", "motion.katarina.performance");
             performanceMenu.AddItem(new MenuItem("motion.katarina.performance.track","Tracked minions for Lasthitting").SetTooltip("High = accurate Lasthit, Low = least FPS-Drops").SetValue(new Slider(3,1,10)));
             lasthit.AddSubMenu(performanceMenu);
@@ -235,7 +237,9 @@ namespace e.Motion_Katarina{
             {
                 _orbwalker.SetAttack(false);
                 _orbwalker.SetMovement(false);
-                if(_menu.Item("motion.katarina.misc.kswhileult").GetValue<bool>())
+                if (_menu.Item("motion.katarina.misc.cancelR").GetValue<bool>() && Player.GetEnemiesInRange(R.Range + 50).Count == 0)
+                    Player.IssueOrder(GameObjectOrder.Stop, Player);
+                if (_menu.Item("motion.katarina.misc.kswhileult").GetValue<bool>())
                     Killsteal();
                 return;
             }
@@ -285,6 +289,7 @@ namespace e.Motion_Katarina{
         static bool HasRBuff()
         {
             return Player.HasBuff("KatarinaR") || Player.IsChannelingImportantSpell() || Player.HasBuff("katarinarsound");
+
         }
 
 
