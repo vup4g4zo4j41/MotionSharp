@@ -12,8 +12,8 @@ namespace e.Motion_Gangplank
     internal class Barrel
     {
         
-        public static int BarrelAttackTick;
-        public static int BarrelObjectNetworkID;
+        public int BarrelAttackTick;
+        public int BarrelObjectNetworkID;
         public int GetNetworkID()
         {
             return BarrelObjectNetworkID;
@@ -24,7 +24,7 @@ namespace e.Motion_Gangplank
         }
         public bool CanQNow()
         {
-            if (Helper.GetQTime(GetBarrel().Position) + Utils.TickCount >= BarrelAttackTick)
+            if (Helper.GetQTime(GetBarrel().Position) + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
             {
                 return true;
             }

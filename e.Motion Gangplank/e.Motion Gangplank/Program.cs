@@ -51,10 +51,17 @@ namespace e.Motion_Gangplank
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             GameObject.OnCreate += OnCreate;
             Obj_AI_Base.OnDoCast += CheckForBarrel;
+            Obj_AI_Base.OnNewPath += OnNewPath;
             //Obj_AI_Base.OnDelete += OnDelete;
 
             #endregion
 
+        }
+
+        private static void OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
+        {
+            if(sender.IsEnemy && sender is Obj_AI_Hero)
+                Combo(true,(Obj_AI_Hero) sender);
         }
 
         private static void CheckForBarrel(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -137,7 +144,7 @@ namespace e.Motion_Gangplank
             Combo();
             Lasthit();
             CleanBarrel();
-            QEDebug();
+            //QEDebug();
             //Game.PrintChat("Delay on Q: "+Q.Delay);
             
         }
@@ -156,23 +163,38 @@ namespace e.Motion_Gangplank
             }
         }
 
-        private static void Combo()
+        private static void Combo(bool extended = false,Obj_AI_Hero sender = null)
         {
             if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
             {
                 return;
             }
-            if (Config.Menu.Item("combo.q").GetValue<bool>() && Q.IsReady())
+            
+            if (Config.Menu.Item("combo.qe").GetValue<bool>() && Q.IsReady())
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical);
                 if (target != null)
                 {
-                    Q.Cast(target);
+                    if (extended && target != sender)
+                    {
+                        extended = false;
+                    }
+                    foreach (var b in AllBarrel)
+                    {
+                        if (b.CanQNow() && !b.GetBarrel().Position.CanEscape(target, extended))
+                        {
+                            Q.Cast(b.GetBarrel());
+                            Game.PrintChat("Casted on Extended basis: "+(extended?"yes":"no"));
+                        }
+                    }
                 }
+                //if (target != null)
+                //{
+                //    Q.Cast(target);
+                //}
             }
         }
-
-
+        
 
         private static void Lasthit()
         {

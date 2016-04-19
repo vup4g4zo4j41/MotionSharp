@@ -23,6 +23,7 @@ namespace e.Motion_Gangplank
             //Combo
             Menu comboMenu = new Menu("Combo", "combo");
             comboMenu.AddItem(new MenuItem("combo.q", "Use Q").SetValue(true));
+            comboMenu.AddItem(new MenuItem("combo.qe", "Use Q").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.e", "Use E").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.r", "Use R").SetValue(true));
             Menu.AddSubMenu(comboMenu);
@@ -34,7 +35,7 @@ namespace e.Motion_Gangplank
             Menu.AddSubMenu(lasthitMenu);
             //Misc
             Menu miscMenu = new Menu("Miscellanious", "misc");
-            miscMenu.AddItem(new MenuItem("misc.additionalServerTick", "Additional Server Tick").SetTooltip("Don't change that if you don't know what it is").SetValue(new Slider(20)));
+            miscMenu.AddItem(new MenuItem("misc.additionalServerTick", "Additional Server Tick").SetTooltip("Don't change that if you don't know what it is").SetValue(new Slider(30)));
             miscMenu.AddItem(new MenuItem("misc.reactionTime", "enemy Reaction Time").SetTooltip("Higher = Possible not to hit enemy with Barrel, Lower = Possible to use additional Barrels").SetValue(new Slider(100,0,500)));
             miscMenu.AddItem(new MenuItem("misc.additionalReactionTime", "Additional Reaction Time on Direction Change").SetTooltip("For Calculation when enemy will change direction").SetValue(new Slider(50, 0, 200)));
             Menu.AddSubMenu(miscMenu);

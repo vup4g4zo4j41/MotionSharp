@@ -11,18 +11,24 @@ namespace e.Motion_Gangplank
 {
     public static class Helper
     {
-        private const int QDELAY = 250;
-        public static float GetQTime(Vector3 position)
+        private const int QDELAY = 300;
+        public static int GetQTime(Vector3 position)
         {
-            return Program.Player.Distance(position) / 2.6f + QDELAY + Game.Ping/2 + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value;
+            return (int)(Program.Player.Distance(position) / 2.6f + QDELAY + Game.Ping/2);
             //Game.PrintChat("Channeling for" + Program.Q.Instance.SData.ChannelDuration);
         }
         
         public static bool CanEscape(this Vector3 kegPosition, Obj_AI_Hero enemy, bool additionalReactionTime = false)
         {
-            if (kegPosition.Distance(enemy.ServerPosition) > 400 - enemy.MoveSpeed*GetQTime(kegPosition))
+            if (kegPosition.Distance(enemy.Position) < 400 - enemy.MoveSpeed*GetQTime(kegPosition))
                 return false;
-            
+            int reactionTicks = Config.Menu.Item("misc.reactionTime").GetValue<Slider>().Value +
+                                (additionalReactionTime
+                                    ? Config.Menu.Item("misc.additionalReactionTime").GetValue<Slider>().Value
+                                    : 0);
+            Vector2 predPos = SPrediction.Prediction.GetFastUnitPosition(enemy,reactionTicks);
+            if(predPos.Distance(enemy.Position) < 400 - enemy.MoveSpeed*GetQTime(kegPosition)*0.00095)
+                return false;
             return true;
         }
         
