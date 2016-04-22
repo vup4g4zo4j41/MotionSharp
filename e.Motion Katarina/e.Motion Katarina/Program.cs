@@ -108,7 +108,7 @@ namespace e.Motion_Katarina{
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.usee", "Use E").SetValue(true));
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.user", "Use R").SetValue(true));
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.mode", "Combo mode").SetValue(new StringList(new[] { "Smart [#recommend]", "Fast [#notrecommend]" })));
-            comboMenu.AddItem(new MenuItem("motion.katarina.combo.order", "Rotation Order").SetValue(new StringList(new []{"Q -> E -> W -> R", "E -> Q -> W -> R" })));
+            comboMenu.AddItem(new MenuItem("motion.katarina.combo.order", "Rotation Order").SetValue(new StringList(new []{"Q -> E -> W -> R", "E -> Q -> W -> R","Dynamic" })));
             _menu.AddSubMenu(comboMenu);
 
             //Harrass-Menü
@@ -303,11 +303,12 @@ namespace e.Motion_Katarina{
         static void Combo(bool useq, bool usew, bool usee, bool user, bool anyTarget = false)
         {
             bool startWithQ = _menu.Item("motion.katarina.combo.order").GetValue<StringList>().SelectedIndex == 0 && useq;
+            bool dynamic = _menu.Item("motion.katarina.combo.order").GetValue<StringList>().SelectedIndex == 2;
             bool smartcombo = _menu.Item("motion.katarina.combo.mode").GetValue<StringList>().SelectedIndex == 0;
-            Obj_AI_Hero target = TargetSelector.GetTarget(startWithQ ? Q.Range : E.Range, TargetSelector.DamageType.Magical);
+            Obj_AI_Hero target = TargetSelector.GetTarget(!startWithQ || dynamic ? E.Range : Q.Range, TargetSelector.DamageType.Magical);
             if(target != null && !target.IsZombie)
             {
-                if (useq && (startWithQ || !usee))
+                if (useq && (startWithQ || !usee) && (!dynamic || target.Distance(Player)<Q.Range))
                 {
                     Q.Cast(target);
                     qTarget = target;
@@ -379,7 +380,7 @@ namespace e.Motion_Katarina{
                 lastLeeQTick = Utils.TickCount;
             }
             // Todo Test
-            if (args.Target != null && args.Target.IsMe)
+            if (args.Target != null && args.Target.IsMe && _menu.Item("motion.katarina.misc.allyTurret").GetValue<bool>())
             {
                 switch (args.SData.Name)
                 {
@@ -515,7 +516,7 @@ namespace e.Motion_Katarina{
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q) + Player.GetSpellDamage(target, SpellSlot.Q, 1);
             }
-            if (target.HasBuff("katarinaqmark"))
+            if (target.HasBuff("katarinaqmark") || target == qTarget)
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q, 1);
             }
@@ -531,7 +532,7 @@ namespace e.Motion_Katarina{
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.R);
             }
-            if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0)
+            if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0 && IgniteSpellSlot!= null)
             {
                 damage += Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
                 damage -= target.HPRegenRate*2.5;

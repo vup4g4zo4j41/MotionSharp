@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
 using SharpDX;
+using Color = System.Drawing.Color;
+
 
 namespace e.Motion_Gangplank
 {
@@ -22,7 +24,7 @@ namespace e.Motion_Gangplank
         public static Spell Q, W, E, R;
         public static Obj_AI_Hero Player => ObjectManager.Player;
         public static List<Barrel> AllBarrel = new List<Barrel>();
-        public static List<Waypoints> AllWaypoints = new List<Waypoints>(); 
+        public static Vector3 EnemyPosition;
         #endregion
 
 
@@ -47,15 +49,27 @@ namespace e.Motion_Gangplank
 
 
             #region Subscriptions
+
+            Drawing.OnDraw += OnDraw;
             Game.OnUpdate += GameOnUpdate;
             Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             GameObject.OnCreate += OnCreate;
             Obj_AI_Base.OnDoCast += CheckForBarrel;
             Obj_AI_Base.OnNewPath += OnNewPath;
+            
             //Obj_AI_Base.OnDelete += OnDelete;
 
             #endregion
 
+        }
+
+        private static void OnDraw(EventArgs args)
+        {
+            Vector2 predPosOnScreen = Drawing.WorldToScreen(Helper.PredPos.To3D());
+            Drawing.DrawLine(predPosOnScreen.X-10,predPosOnScreen.Y-10, predPosOnScreen.X + 10, predPosOnScreen.Y + 10,3,Color.Red);
+            Drawing.DrawLine(predPosOnScreen.X + 10, predPosOnScreen.Y - 10, predPosOnScreen.X - 10, predPosOnScreen.Y + 10, 3, Color.Red);
+            Drawing.DrawLine(predPosOnScreen,Drawing.WorldToScreen(EnemyPosition),1,Color.Blue);
+            
         }
 
         private static void OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
@@ -175,12 +189,16 @@ namespace e.Motion_Gangplank
                 Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical);
                 if (target != null)
                 {
+                    EnemyPosition = target.Position;
+                    Helper.GetPredPos(target);
                     if (extended && target != sender)
                     {
                         extended = false;
                     }
+                    if (!Q.IsReady()) return;
                     foreach (var b in AllBarrel)
                     {
+                        
                         if (b.CanQNow() && !b.GetBarrel().Position.CanEscape(target, extended))
                         {
                             Q.Cast(b.GetBarrel());
