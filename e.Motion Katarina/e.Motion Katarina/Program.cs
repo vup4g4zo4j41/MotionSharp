@@ -161,6 +161,7 @@ namespace e.Motion_Katarina{
             drawingsMenu.AddItem(new MenuItem("motion.katarina.drawings.draww", "Draw W").SetValue(false));
             drawingsMenu.AddItem(new MenuItem("motion.katarina.drawings.drawe", "Draw E").SetValue(false));
             drawingsMenu.AddItem(new MenuItem("motion.katarina.drawings.drawr", "Draw R").SetValue(false));
+            drawingsMenu.AddItem(new MenuItem("motion.katarina.drawings.dmg", "Draw Damage to target").SetValue(true));
             drawingsMenu.AddItem(new MenuItem("motion.katarina.drawings.drawalways", "Draw Always").SetValue(false).SetTooltip("Enable this if you want Drawings while your Skills are on Cooldown"));
             _menu.AddSubMenu(drawingsMenu);
 
@@ -229,6 +230,7 @@ namespace e.Motion_Katarina{
 
         static void Game_OnUpdate(EventArgs args) {
             Demark();
+            Utility.HpBarDamageIndicator.Enabled = _menu.Item("motion.katarina.drawings.dmg").GetValue<bool>();
             if (Player.IsDead || Player.IsRecalling())
             {
                 return;
