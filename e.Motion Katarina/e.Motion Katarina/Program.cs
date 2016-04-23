@@ -310,7 +310,7 @@ namespace e.Motion_Katarina{
             Obj_AI_Hero target = TargetSelector.GetTarget(!startWithQ || dynamic ? E.Range : Q.Range, TargetSelector.DamageType.Magical);
             if(target != null && !target.IsZombie)
             {
-                if (useq && (startWithQ || !usee) && (!dynamic || target.Distance(Player)<Q.Range))
+                if (useq && (startWithQ || !usee || dynamic) && target.Distance(Player)<Q.Range)
                 {
                     Q.Cast(target);
                     qTarget = target;
