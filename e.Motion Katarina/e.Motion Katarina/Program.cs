@@ -25,7 +25,7 @@ namespace e.Motion_Katarina{
         private static Obj_AI_Base qMinion;
         private static readonly Obj_AI_Hero[] AllEnemy = HeroManager.Enemies.ToArray();
         private static bool WardJumpReady;
-        private static SpellSlot IgniteSpellSlot;
+        private static SpellSlot IgniteSpellSlot = SpellSlot.Unknown;
         private static readonly List<int> AllEnemyTurret = new List<int>();
         private static readonly List<int> AllAllyTurret = new List<int>();
         private static Dictionary<int,bool> TurretHasAggro = new Dictionary<int, bool>();
@@ -534,7 +534,7 @@ namespace e.Motion_Katarina{
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.R);
             }
-            if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0 && IgniteSpellSlot!= null)
+            if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0 && IgniteSpellSlot != SpellSlot.Unknown && IgniteSpellSlot.IsReady())
             {
                 damage += Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
                 damage -= target.HPRegenRate*2.5;
@@ -572,7 +572,7 @@ namespace e.Motion_Katarina{
             {
                 return 1;
             }
-            if (Player.GetSummonerSpellDamage(target,Damage.SummonerSpell.Ignite) > 0 && !target.HasBuff("summonerdot") && !HasRBuff())
+            if (Player.GetSummonerSpellDamage(target,Damage.SummonerSpell.Ignite) > 0 && !target.HasBuff("summonerdot") && !HasRBuff() && IgniteSpellSlot != SpellSlot.Unknown && IgniteSpellSlot.IsReady())
             {
                 damage += Player.GetSummonerSpellDamage(target,Damage.SummonerSpell.Ignite);
                 damage -= target.HPRegenRate*2.5;
