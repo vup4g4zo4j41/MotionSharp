@@ -30,6 +30,7 @@ namespace e.Motion_Katarina{
         private static readonly List<int> AllAllyTurret = new List<int>();
         private static Dictionary<int,bool> TurretHasAggro = new Dictionary<int, bool>();
         private static int lastLeeQTick;
+        private static int tickValue;
 
         #endregion
 
@@ -176,6 +177,9 @@ namespace e.Motion_Katarina{
             
             Menu performanceMenu = new Menu("Performance", "motion.katarina.performance");
             performanceMenu.AddItem(new MenuItem("motion.katarina.performance.track","Tracked minions for Lasthitting").SetTooltip("High = accurate Lasthit, Low = least FPS-Drops").SetValue(new Slider(3,1,10)));
+            performanceMenu.AddItem(new MenuItem("motion.katarina.performance.tickmanager", "Enable Tickmanager").SetValue(false));
+            performanceMenu.AddItem(new MenuItem("motion.katarina.performance.ticks", "Update Frequency for Tickmanager").SetTooltip("Time in ms when to track Minions again").SetValue(new Slider(8,2,50)));
+
             lasthit.AddSubMenu(performanceMenu);
             _menu.AddSubMenu(miscMenu);
 
@@ -638,9 +642,12 @@ namespace e.Motion_Katarina{
 
         private static void Lasthit()
         {
-            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit)
+            
+            if (_orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || (_menu.Item("motion.katarina.performance.tickmanager").GetValue<bool>() && Utils.TickCount < tickValue))
                 return;
             Obj_AI_Base[] sourroundingMinions;
+            int tickCount = _menu.Item("motion.katarina.performance.ticks").GetValue<Slider>().Value;
+            tickValue = Utils.TickCount + tickCount;
             if (_menu.Item("motion.katarina.lasthit.usew").GetValue<bool>() && W.IsReady())
             {
                 sourroundingMinions = MinionManager.GetMinions(Player.Position, 390).Take(3).ToArray();
@@ -655,7 +662,7 @@ namespace e.Motion_Katarina{
                                     (Player.CanAttack
                                         ? Game.Ping/2
                                         : Orbwalking.LastAATick - Utils.GameTimeTickCount +
-                                          (int) Player.AttackDelay*1000) + 200 + (int) Player.AttackCastDelay*1000) <= 0))
+                                          (int) Player.AttackDelay*1000) + 200 + (_menu.Item("motion.katarina.performance.tickmanager").GetValue<bool>()?tickCount-1:0)+(int) Player.AttackCastDelay*1000) <= 0))
                     {
                         W.Cast();
                     }
@@ -687,7 +694,7 @@ namespace e.Motion_Katarina{
                                 (Player.CanAttack
                                     ? Game.Ping/2
                                     : Orbwalking.LastAATick - Utils.GameTimeTickCount + (int) Player.AttackDelay*1000) +
-                                200 + (int) Player.AttackCastDelay*1000) <= 0
+                                200 + (_menu.Item("motion.katarina.performance.tickmanager").GetValue<bool>() ? tickCount - 1 : 0) + (int) Player.AttackCastDelay*1000) <= 0
                             &&
                             !IsTurretPosition(Player.Position.Extend(minion.Position,
                                 Player.Position.Distance(minion.Position) + 35))))
