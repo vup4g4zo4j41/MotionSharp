@@ -108,7 +108,8 @@ namespace e.Motion_Katarina{
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.usew", "Use W").SetValue(true));
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.usee", "Use E").SetValue(true));
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.user", "Use R").SetValue(true));
-            comboMenu.AddItem(new MenuItem("motion.katarina.combo.mode", "Combo mode").SetValue(new StringList(new[] { "Smart [#recommend]", "Fast [#notrecommend]" })));
+            comboMenu.AddItem(new MenuItem("motion.katarina.combo.rsafe", "Advanced R Checks").SetValue(true).SetTooltip("Will not Cast R if enemy is not killable"));
+            comboMenu.AddItem(new MenuItem("motion.katarina.combo.mode", "Combo mode").SetValue(new StringList(new[] { "Smart", "Fast" })));
             comboMenu.AddItem(new MenuItem("motion.katarina.combo.order", "Rotation Order").SetValue(new StringList(new []{"Q -> E -> W -> R", "E -> Q -> W -> R","Dynamic" })));
             _menu.AddSubMenu(comboMenu);
 
@@ -206,7 +207,16 @@ namespace e.Motion_Katarina{
             #endregion
         }
 
-       
+        private static bool KillableByUlt()
+        {
+            List<Obj_AI_Hero> enemies = Player.Position.GetEnemiesInRange(R.Range);
+            if (!_menu.Item("motion.katarina.combo.rsafe").GetValue<bool>() || enemies.Count > 1 || enemies[0].Position.GetAlliesInRange(800).Count > 0 ||
+                R.GetDamage(enemies[0], 1) + (enemies[0].HasBuff("katarinaqmark") ? Q.GetDamage(enemies[0], 1) : 0) > enemies[0].Health)
+            {
+                return true;
+            }
+            return false;
+        }
 
         private static void OnDraw(EventArgs args)
         {
@@ -343,7 +353,7 @@ namespace e.Motion_Katarina{
                     W.Cast();
                     return;
                 }
-                if (target.Distance(Player) < R.Range - 200 && user)
+                if (target.Distance(Player) < R.Range - 200 && user && KillableByUlt())
                 {
                     R.Cast();
                 }
