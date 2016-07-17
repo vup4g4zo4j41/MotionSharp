@@ -183,13 +183,7 @@ namespace e.Motion_Katarina{
 
             lasthit.AddSubMenu(performanceMenu);
             _menu.AddSubMenu(miscMenu);
-
-            //Dev-Menü
-            Menu devMenu = new Menu("Dev", "motion.katarina.dev");
-            devMenu.AddItem(new MenuItem("motion.katarina.dev.enable", "Enable Dev-Tools").SetValue(false));
-            devMenu.AddItem(new MenuItem("motion.katarina.dev.targetdistance", "Distance to Target").SetValue(new KeyBind("L".ToCharArray()[0], KeyBindType.Press)));
-            _menu.AddSubMenu(devMenu);
-
+            
             //alles zum Hauptmenü hinzufügen
             _menu.AddToMainMenu();
 
@@ -216,6 +210,7 @@ namespace e.Motion_Katarina{
                 return true;
             }
             return false;
+
         }
 
         private static void OnDraw(EventArgs args)
@@ -269,7 +264,6 @@ namespace e.Motion_Katarina{
             }
             _orbwalker.SetAttack(true);
             _orbwalker.SetMovement(true);
-            //Dev();
             Killsteal();
             //Combo
             if (_orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Combo)
@@ -286,18 +280,6 @@ namespace e.Motion_Katarina{
             if (_menu.Item("motion.katarina.misc.wardjumpkey").GetValue<KeyBind>().Active && _menu.Item("motion.katarina.misc.wardjump").GetValue<bool>())
             {
                 WardJump(Game.CursorPos);
-            }
-        }
-
-        private static void Dev()
-        {
-            if(_menu.Item("motion.katarina.dev.enable").GetValue<bool>() && _menu.Item("motion.katarina.dev.targetdistance").GetValue<KeyBind>().Active)
-            {
-                Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Magical);
-                if (target != null)
-                {
-                    Game.PrintChat("Distance to Target:" + Player.Distance(target));
-                }
             }
         }
 
@@ -353,7 +335,7 @@ namespace e.Motion_Katarina{
                     W.Cast();
                     return;
                 }
-                if (target.Distance(Player) < R.Range - 200 && user && KillableByUlt())
+                if (target.Distance(Player) < R.Range && user && KillableByUlt())
                 {
                     R.Cast();
                 }
@@ -531,26 +513,35 @@ namespace e.Motion_Katarina{
             if (Q.IsReady())
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q) + Player.GetSpellDamage(target, SpellSlot.Q, 1);
+                Game.PrintChat("Q:" + Player.GetSpellDamage(target, SpellSlot.Q));
+                Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
             }
             if (target.HasBuff("katarinaqmark") || target == qTarget)
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q, 1);
+                Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
             }
             if (W.IsReady())
             {
-                damage += Player.GetSpellDamage(target, SpellSlot.W);
+                damage += W.GetDamage(target);
+                Game.PrintChat("W:" + W.GetDamage(target));
+                Game.PrintChat("TradW:" + Player.GetSpellDamage(target,SpellSlot.W));
             }
             if (E.IsReady())
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.E);
+                Game.PrintChat("E:" + Player.GetSpellDamage(target, SpellSlot.E));
             }
             if (R.IsReady() || (Player.GetSpell(R.Slot).State == SpellState.Surpressed && R.Level > 0))
+                
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.R);
+                Game.PrintChat("R:" + Player.GetSpellDamage(target, SpellSlot.R));
             }
             if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0 && IgniteSpellSlot != SpellSlot.Unknown && IgniteSpellSlot.IsReady())
             {
                 damage += Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
+                Game.PrintChat("F:" + Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite));
                 damage -= target.HPRegenRate*2.5;
             }
             return (float)damage;
