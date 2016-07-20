@@ -513,35 +513,35 @@ namespace e.Motion_Katarina{
             if (Q.IsReady())
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q) + Player.GetSpellDamage(target, SpellSlot.Q, 1);
-                Game.PrintChat("Q:" + Player.GetSpellDamage(target, SpellSlot.Q));
-                Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
+                //Game.PrintChat("Q:" + Player.GetSpellDamage(target, SpellSlot.Q));
+                //Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
             }
             if (target.HasBuff("katarinaqmark") || target == qTarget)
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.Q, 1);
-                Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
+                //Game.PrintChat("Q2:" + Player.GetSpellDamage(target, SpellSlot.Q, 1));
             }
             if (W.IsReady())
             {
                 damage += W.GetDamage(target);
-                Game.PrintChat("W:" + W.GetDamage(target));
-                Game.PrintChat("TradW:" + Player.GetSpellDamage(target,SpellSlot.W));
+                //Game.PrintChat("W:" + W.GetDamage(target));
+                //Game.PrintChat("TradW:" + Player.GetSpellDamage(target,SpellSlot.W));
             }
             if (E.IsReady())
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.E);
-                Game.PrintChat("E:" + Player.GetSpellDamage(target, SpellSlot.E));
+                //Game.PrintChat("E:" + Player.GetSpellDamage(target, SpellSlot.E));
             }
             if (R.IsReady() || (Player.GetSpell(R.Slot).State == SpellState.Surpressed && R.Level > 0))
                 
             {
                 damage += Player.GetSpellDamage(target, SpellSlot.R);
-                Game.PrintChat("R:" + Player.GetSpellDamage(target, SpellSlot.R));
+                //Game.PrintChat("R:" + Player.GetSpellDamage(target, SpellSlot.R));
             }
             if (Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite) > 0 && IgniteSpellSlot != SpellSlot.Unknown && IgniteSpellSlot.IsReady())
             {
                 damage += Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite);
-                Game.PrintChat("F:" + Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite));
+                //Game.PrintChat("F:" + Player.GetSummonerSpellDamage(target, Damage.SummonerSpell.Ignite));
                 damage -= target.HPRegenRate*2.5;
             }
             return (float)damage;
