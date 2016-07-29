@@ -24,7 +24,7 @@ namespace e.Motion_Gangplank
         }
         public bool CanQNow()
         {
-            if (Helper.GetQTime(GetBarrel().Position) + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
+            if (Program.Player.Distance(GetBarrel().Position)<=625 && Helper.GetQTime(GetBarrel().Position) + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
             {
                 return true;
             }
@@ -37,7 +37,7 @@ namespace e.Motion_Gangplank
             BarrelAttackTick = GetBarrelAttackTick();
         }
 
-        public void reduceBarrelAttackTick()
+        public void ReduceBarrelAttackTick()
         {
             if (Program.Player.Level < 7) BarrelAttackTick -= 2000;
             else if (Program.Player.Level < 13) BarrelAttackTick -= 1000;
