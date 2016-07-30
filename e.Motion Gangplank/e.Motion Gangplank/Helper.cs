@@ -16,7 +16,6 @@ namespace e.Motion_Gangplank
         public static int GetQTime(Vector3 position)
         {
             return (int)(Program.Player.Distance(position) / 2.6f + QDELAY + Game.Ping/2);
-            //Game.PrintChat("Channeling for" + Program.Q.Instance.SData.ChannelDuration);
         }
 
         public static bool GetPredPos(Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
@@ -35,8 +34,8 @@ namespace e.Motion_Gangplank
             GetPredPos(enemy, additionalReactionTime);
             if (PredPos.Distance(kegPosition) < 400 - enemy.MoveSpeed*(GetQTime(kegPosition)+(additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f)
             {
-                Game.PrintChat("Distance:" + PredPos.Distance(kegPosition));
-                Game.PrintChat("Max Distance:" + (400 - enemy.MoveSpeed * (GetQTime(kegPosition) + (additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f));
+                //Game.PrintChat("Distance:" + PredPos.Distance(kegPosition));
+                //Game.PrintChat("Max Distance:" + (400 - enemy.MoveSpeed * (GetQTime(kegPosition) + (additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f));
                 return true;
             }
             return false;

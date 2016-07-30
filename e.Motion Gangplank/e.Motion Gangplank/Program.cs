@@ -75,22 +75,19 @@ namespace e.Motion_Gangplank
             Menu.Initialize();
             #endregion
             QDelay = new DelayManager(Q,1500);
-            Game.PrintChat("e.Motion Gangplank loaded");
+            Game.PrintChat("<font color='#bb0000'>e</font>.<font color='#0000cc'>Motion</font> Gangplank loaded");
             SetBarrelTime();
-            //Game.PrintChat("<font color='#bb0000'>e</font>.<font color='#0000cc'>Motion</font> Gangplank loaded");
              
 
             #region Subscriptions
 
             Drawing.OnDraw += OnDraw;
             Game.OnUpdate += GameOnUpdate;
-            Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             GameObject.OnCreate += OnCreate;
             Obj_AI_Base.OnDoCast += CheckForBarrel;
             Obj_AI_Base.OnNewPath += OnNewPath;
             Obj_AI_Base.OnLevelUp += OnLevelUp;
             
-            //Obj_AI_Base.OnDelete += OnDelete;
 
             #endregion
 
@@ -104,10 +101,6 @@ namespace e.Motion_Gangplank
 
         private static void OnDraw(EventArgs args)
         {
-            Vector2 predPosOnScreen = Drawing.WorldToScreen(Helper.PredPos.To3D());
-            Drawing.DrawLine(predPosOnScreen.X-10,predPosOnScreen.Y-10, predPosOnScreen.X + 10, predPosOnScreen.Y + 10,3,Color.Red);
-            Drawing.DrawLine(predPosOnScreen.X + 10, predPosOnScreen.Y - 10, predPosOnScreen.X - 10, predPosOnScreen.Y + 10, 3, Color.Red);
-            Drawing.DrawLine(predPosOnScreen,Drawing.WorldToScreen(EnemyPosition),1,Color.Blue);
             Warning();
         }
 
@@ -156,7 +149,6 @@ namespace e.Motion_Gangplank
                     
                     if (AllBarrel.ElementAt(i).GetBarrel().NetworkId == args.Target.NetworkId)
                     {
-                        //Game.PrintChat("Barrel Time reduced");
                         if (sender.IsMelee)
                         {
                             AllBarrel.ElementAt(i).ReduceBarrelAttackTick();
@@ -187,42 +179,14 @@ namespace e.Motion_Gangplank
         }
         
 
-        private static void OnDelete(GameObject sender, EventArgs args)
-        {
-            if (sender.Name == "Barrel")
-            {
-                Console.WriteLine("Some Barrel was removed");
-                for (int i = AllBarrel.Count-1; i >= 0; i--)
-                {
-                    if (AllBarrel.ElementAt(i).GetBarrel().NetworkId == sender.NetworkId)
-                    {
-                        AllBarrel.RemoveAt(i);
-                        
-                        Console.WriteLine("Removed a Barrel");
-                        break;
-                    }
-                }
-            }
-        }
-
         private static void OnCreate(GameObject sender, EventArgs args)
         {
             if (sender.Name == "Barrel")
             {
                 AllBarrel.Add(new Barrel((Obj_AI_Minion)sender));
-                Console.WriteLine("We got " + AllBarrel.Count + " Barrels");
-            }
-            
-
-        }
-
-        private static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (sender.IsMe && args.Slot == SpellSlot.E)
-            {
-                Game.PrintChat("x: " + args.End.X  +", y: " + args.End.Y);
             }
         }
+        
 
         private static void GameOnUpdate(EventArgs args)
         {
@@ -233,9 +197,6 @@ namespace e.Motion_Gangplank
             Combo();
             Lasthit();
             Cleanse();
-            //Game.PrintChat(E.IsReady(1).ToString());
-            //QEDebug();
-            //Game.PrintChat("Delay on Q: "+Q.Delay);
 
         }
 
@@ -290,7 +251,7 @@ namespace e.Motion_Gangplank
                         .CannotEscape(e, false, true)) != null)
             {
                 E.Cast(castPos);
-                Game.PrintChat("Got Additional Targets");
+                Console.WriteLine("Got Additional Targets, please report that on the Thread in Forum if you see it");
             }
         }
 
@@ -310,10 +271,10 @@ namespace e.Motion_Gangplank
                 }
             }
 
-            if (Config.Menu.Item("combo.qe").GetValue<bool>() /* && Q.IsReady() */)
+            if (Config.Menu.Item("combo.qe").GetValue<bool>()  && Q.IsReady())
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
-                if (target != null && Q.IsReady())
+                if (target != null)
                 {
                     EnemyPosition = target.Position;
                     Helper.GetPredPos(target);
@@ -328,7 +289,6 @@ namespace e.Motion_Gangplank
                         {
                             TryE(b, target);
                             QDelay.Delay(b.GetBarrel());
-                            Game.PrintChat("Casted on Extended basis: "+(extended?"yes":"no"));
                             break;
                         }
                     }
@@ -347,7 +307,6 @@ namespace e.Motion_Gangplank
                             {
                                 E.Cast(castPos);
                                 QDelay.Delay(b.GetBarrel());
-                                Game.PrintChat("Casted on Extended basis: " + (extended ? "yes" : "no"));
                                 break;
                             }
                         }
@@ -368,7 +327,6 @@ namespace e.Motion_Gangplank
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(1000,TargetSelector.DamageType.Physical);
                 if (target == null) return;
-                //Game.PrintChat("code here");
                 Helper.GetPredPos(target);
                 Vector2 castPos = target.Position.Extend(Helper.PredPos.To3D(), 200).To2D();
                 if (Player.Distance(castPos) <= E.Range)
