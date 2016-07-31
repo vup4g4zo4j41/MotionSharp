@@ -330,7 +330,7 @@ namespace e.Motion_Gangplank
             if (Config.Item("combo.q").GetValue<bool>() && Q.IsReady())
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
-                if (target != null && (E.Cooldown >= Q.Instance.Cooldown - BarrelTime || Config.Item("key.q").GetValue<KeyBind>().Active) && !AllBarrel.Any(b => b.GetBarrel().Distance(Player) < 1200))
+                if (target != null && (Config.Item("key.q").GetValue<KeyBind>().Active || (!E.IsReady() && !AllBarrel.Any(b => b.GetBarrel().Position.Distance(target.Position) < 600))))
                 {
                     Q.Cast(target);
                 }
