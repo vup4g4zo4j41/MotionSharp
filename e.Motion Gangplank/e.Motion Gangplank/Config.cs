@@ -38,6 +38,7 @@ namespace e.Motion_Gangplank
             //Harass
             Menu harassMenu = new Menu("Harass", "harass");
             harassMenu.AddItem(new MenuItem("harass.q", "Use Q").SetValue(true));
+            Menu.AddSubMenu(harassMenu);
 
             //Lasthit
             Menu lasthitMenu = new Menu("Lasthit", "lasthit");
