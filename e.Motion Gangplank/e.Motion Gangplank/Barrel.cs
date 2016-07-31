@@ -22,9 +22,9 @@ namespace e.Motion_Gangplank
         {
             return ObjectManager.GetUnitByNetworkId<Obj_AI_Minion>(BarrelObjectNetworkID);
         }
-        public bool CanQNow(int extraTime = 0)
+        public bool CanQNow()
         {
-            if (Program.Player.Distance(GetBarrel().Position)<=625 && Helper.GetQTime(GetBarrel().Position) + extraTime + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
+            if (Program.Player.Distance(GetBarrel().Position)<=625 && Helper.GetQTime(GetBarrel().Position) + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
             {
                 return true;
             }

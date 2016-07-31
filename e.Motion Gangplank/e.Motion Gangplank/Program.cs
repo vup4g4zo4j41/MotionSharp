@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Remoting.Channels;
@@ -24,13 +23,10 @@ namespace e.Motion_Gangplank
         }
         #region Declaration
 
-        private static bool Triple;
-        private static Vector3 TriplePosition;
-        private static Vector3 TripleSecondPosition;
         private static int BarrelTime;
         private static Random Rand = new Random();
         private static DelayManager QDelay;
-        private static DelayManager EDelay;
+
         private static Dictionary<string, BuffType> Buffs = new Dictionary<string, BuffType>()
         {
             {"charm",BuffType.Charm},
@@ -79,7 +75,6 @@ namespace e.Motion_Gangplank
             Menu.Initialize();
             #endregion
             QDelay = new DelayManager(Q,1500);
-            //EDelay = new DelayManager(E,3000);
             Game.PrintChat("<font color='#bb0000'>e</font>.<font color='#0000cc'>Motion</font> Gangplank loaded");
             SetBarrelTime();
              
@@ -89,7 +84,6 @@ namespace e.Motion_Gangplank
             Drawing.OnDraw += OnDraw;
             Game.OnUpdate += GameOnUpdate;
             GameObject.OnCreate += OnCreate;
-            Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
             Obj_AI_Base.OnDoCast += CheckForBarrel;
             Obj_AI_Base.OnNewPath += OnNewPath;
             Obj_AI_Base.OnLevelUp += OnLevelUp;
@@ -97,27 +91,6 @@ namespace e.Motion_Gangplank
 
             #endregion
 
-        }
-
-        private static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
-        {
-            if (Triple && sender.IsMe && args.Slot == SpellSlot.Q)
-            {
-                Utility.DelayAction.Add(Helper.GetQTime(TriplePosition,true) - 150,() => CastEToBestPosition(TripleSecondPosition));
-                Game.PrintChat("Triple - Phase 3");
-            }
-        }
-
-        private static void CastEToBestPosition(Vector3 tripleSecondPosition)
-        {
-            Obj_AI_Hero target = TargetSelector.GetTarget(1000, TargetSelector.DamageType.Physical, true, null, tripleSecondPosition);
-            if (target != null)
-            {
-                Vector3 desiredCast = tripleSecondPosition.Extend(target.Position,Math.Min(650, (int) tripleSecondPosition.Distance(target.Position)));
-                E.Cast(Player.Position.Extend(desiredCast,Math.Min(Player.Distance(desiredCast),E.Range)));
-                Triple = false; 
-                Game.PrintChat("Triple - Phase 4");
-            }
         }
 
         private static void OnLevelUp(Obj_AI_Base sender, EventArgs args)
@@ -213,19 +186,10 @@ namespace e.Motion_Gangplank
                 AllBarrel.Add(new Barrel((Obj_AI_Minion)sender));
             }
         }
-
-        private static void StartTriple()
-        {
-            if (Triple && E.IsReady(Helper.GetQTime(TriplePosition, true) - 300))
-            {
-                QDelay.UnblockDelay();
-            }
-        }
+        
 
         private static void GameOnUpdate(EventArgs args)
         {
-            //Game.PrintChat("E Cooldown:"+E.Instance.Cooldown);
-            StartTriple();
             KillSteal();
             QDelay.CheckEachTick();
             AutoE();
@@ -307,7 +271,7 @@ namespace e.Motion_Gangplank
                 }
             }
 
-            if (Config.Menu.Item("combo.qe").GetValue<bool>()  && Q.IsReady() && !Triple)
+            if (Config.Menu.Item("combo.qe").GetValue<bool>()  && Q.IsReady())
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
                 if (target != null)
@@ -348,32 +312,10 @@ namespace e.Motion_Gangplank
                         }
                     }
                 }
+                
             }
 
-            if (!Triple && Config.Item("combo.triple").GetValue<bool>() && E.Instance.Ammo > 1 && AllBarrel.Any(b => b.GetBarrel().Distance(Player) <= 650))
-            {
-                Obj_AI_Hero target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
-                if (target != null)
-                {
-                    Barrel myBarrel =
-                        AllBarrel.FirstOrDefault(
-                            /*b => b.GetBarrel().Distance(target) <= 1200 && b.GetBarrel().Distance(target) >= 500*/);
-                    if (myBarrel != null && myBarrel.CanQNow())
-                    {
-                        Vector3 desiredCast = myBarrel.GetBarrel().Position.Extend(target.Position, 650);
-                        if (desiredCast.Distance(Player.Position) > 1000)
-                        {
-                            desiredCast = Player.Position.Extend(desiredCast, 1000);
-                        }
-                        QDelay.Delay(myBarrel.GetBarrel(), true);
-                        Triple = true;
-                        TriplePosition = myBarrel.GetBarrel().Position;
-                        Game.PrintChat("Triple - Phase 1");
-                    }
-                }
-            }
-
-            if (Config.Item("combo.q").GetValue<bool>() && Q.IsReady() && !Triple)
+            if (Config.Item("combo.q").GetValue<bool>() && Q.IsReady())
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (target != null && (E.Cooldown >= Q.Instance.Cooldown - BarrelTime || Config.Item("key.q").GetValue<KeyBind>().Active) && !AllBarrel.Any(b => b.GetBarrel().Distance(Player) < 1200))
@@ -397,7 +339,7 @@ namespace e.Motion_Gangplank
                 }
             }
         }
-        
+
         private static IEnumerable<Barrel> GetBarrelsInRange (Barrel initalBarrel)
         {
             return AllBarrel.Where(b => b.GetBarrel().Position.Distance(initalBarrel.GetBarrel().Position) < 650 && b != initalBarrel);
