@@ -29,7 +29,7 @@ namespace e.Motion_Gangplank
             return true;
 
         }
-        public static bool CannotEscape(this Vector3 kegPosition, Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
+        public static bool CannotEscape(this Vector3 kegPosition, Vector3 distCalcPosition, Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
         {
             GetPredPos(enemy, additionalReactionTime);
             if (PredPos.Distance(kegPosition) < 400 - enemy.MoveSpeed*(GetQTime(kegPosition)+(additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f)

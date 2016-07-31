@@ -254,13 +254,15 @@ namespace e.Motion_Gangplank
             Vector3 barrelPos = barrel.GetBarrel().Position;
             if (HeroManager.Enemies.FirstOrDefault(
                 e =>
-                    e != toIgnore && !e.IsZombie && !e.IsDead && e.Distance(barrelPos) < 1200 &&
-                    !barrelPos.CannotEscape(e) &&
-                    !GetBarrelsInRange(barrel).Any(b => b.GetBarrel().Position.CannotEscape(e, false, true)) &&
-                    Helper.GetPredPos(e) &&
-                    (castPos =
-                        barrelPos.Extend(Helper.PredPos.To3D(), Math.Min(650, Player.Distance(Helper.PredPos.To3D()))))
-                        .CannotEscape(e, false, true)) != null)
+                    e != toIgnore 
+                    && !e.IsZombie 
+                    && !e.IsDead 
+                    && e.Distance(barrelPos) < 1200 
+                    && !barrelPos.CannotEscape(barrelPos,e) 
+                    && !GetBarrelsInRange(barrel).Any(b => b.GetBarrel().Position.CannotEscape(barrelPos,e, false, true)) 
+                    && Helper.GetPredPos(e) 
+                    && (castPos = barrelPos.Extend(Helper.PredPos.To3D(), Math.Min(650, Player.Distance(Helper.PredPos.To3D()))))
+                        .CannotEscape(barrelPos,e, false, true)) != null)
             {
                 E.Cast(castPos);
                 Console.WriteLine("Got Additional Targets, please report that on the Thread in Forum if you see it");
@@ -297,7 +299,7 @@ namespace e.Motion_Gangplank
                     foreach (var b in AllBarrel)
                     {
                         
-                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(target, extended,true))))
+                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(b.GetBarrel().Position,target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(b.GetBarrel().Position,target, extended,true))))
                         {
                             TryE(b, target);
                             QDelay.Delay(b.GetBarrel());
@@ -310,12 +312,11 @@ namespace e.Motion_Gangplank
                         foreach (var b in AllBarrel)
                         {
                             Vector3 castPos;
-                            if (b.CanQNow() &&
-                                (castPos =
-                                    b.GetBarrel()
-                                        .Position.Extend(Helper.PredPos.To3D(),
-                                            Math.Min(650, Helper.PredPos.To3D().Distance(b.GetBarrel().Position))))
-                                    .Distance(Player.Position) < 1000 && castPos.CannotEscape(target, extended, true))
+                            castPos =
+                                b.GetBarrel()
+                                    .Position.Extend(Helper.PredPos.To3D(),
+                                        Math.Min(650, Helper.PredPos.To3D().Distance(b.GetBarrel().Position)));
+                            if (b.CanQNow() && castPos.Distance(Player.Position) < 1000 && castPos.CannotEscape(b.GetBarrel().Position, target, extended, true))
                             {
                                 E.Cast(castPos);
                                 QDelay.Delay(b.GetBarrel());
