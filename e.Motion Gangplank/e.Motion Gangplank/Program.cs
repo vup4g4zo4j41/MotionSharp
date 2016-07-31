@@ -191,13 +191,25 @@ namespace e.Motion_Gangplank
         private static void GameOnUpdate(EventArgs args)
         {
             KillSteal();
+            Harass();
             QDelay.CheckEachTick();
             AutoE();
             CleanBarrel();
             Combo();
             Lasthit();
             Cleanse();
+        }
 
+        private static void Harass()
+        {
+            if (Q.IsReady() && Config.Item("harass.q").GetValue<bool>() && Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
+            {
+                Obj_AI_Hero target = TargetSelector.GetTarget(650, TargetSelector.DamageType.Physical);
+                if (target != null)
+                {
+                    Q.Cast(target);
+                }
+            }
         }
 
         private static void AutoE()

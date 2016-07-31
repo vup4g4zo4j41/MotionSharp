@@ -35,6 +35,10 @@ namespace e.Motion_Gangplank
             comboMenu.AddItem(new MenuItem("combo.rmin", "Minimum enemies for R").SetValue(new Slider(3, 2, 5)));
             Menu.AddSubMenu(comboMenu);
 
+            //Harass
+            Menu harassMenu = new Menu("Harass", "harass");
+            harassMenu.AddItem(new MenuItem("harass.q", "Use Q").SetValue(true));
+
             //Lasthit
             Menu lasthitMenu = new Menu("Lasthit", "lasthit");
             lasthitMenu.AddItem(new MenuItem("lasthit.q", "Use Q").SetValue(true));
