@@ -13,9 +13,9 @@ namespace e.Motion_Gangplank
     {
         private const int QDELAY = 300;
         public static Vector2 PredPos;
-        public static int GetQTime(Vector3 position)
+        public static int GetQTime(Vector3 position, bool secondBarrel = false)
         {
-            return (int)(Program.Player.Distance(position) / 2.6f + QDELAY + Game.Ping/2);
+            return (int)(Program.Player.Distance(position) / 2.6f + QDELAY + Game.Ping/2 + (secondBarrel ? 400:0));
         }
 
         public static bool GetPredPos(Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
