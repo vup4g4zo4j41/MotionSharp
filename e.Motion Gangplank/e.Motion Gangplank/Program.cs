@@ -135,6 +135,7 @@ namespace e.Motion_Gangplank
         private static void OnDraw(EventArgs args)
         {
             Warning();
+            DrawE();
         }
 
         private static void KillSteal()
@@ -200,6 +201,7 @@ namespace e.Motion_Gangplank
 
         private static void GameOnUpdate(EventArgs args)
         {
+            
             KillSteal();
             Harass();
             QDelay.CheckEachTick();
@@ -208,6 +210,29 @@ namespace e.Motion_Gangplank
             Combo();
             Lasthit();
             Cleanse();
+            SemiAutomaticE();
+        }
+
+        private static void SemiAutomaticE()
+        {
+            if (E.IsReady() && Config.Item("key.eenabled").GetValue<bool>() &&
+                Config.Item("key.e").GetValue<KeyBind>().Active)
+            {
+                float lowest = 1600;
+                Vector3 bPos = Vector3.Zero;
+                foreach (Barrel barrel in AllBarrel)
+                {
+                    if (barrel.GetBarrel().Distance(Game.CursorPos) < lowest)
+                    {
+                        bPos = barrel.GetBarrel().Position;
+                        lowest = barrel.GetBarrel().Distance(Game.CursorPos);
+                    }
+                }
+                if (lowest != 1600f)
+                {
+                    E.Cast(bPos.Extend(Game.CursorPos, Math.Min(685, lowest)));
+                }
+            }
         }
 
         private static void Harass()
@@ -242,6 +267,28 @@ namespace e.Motion_Gangplank
                     
                 }
                 
+            }
+        }
+
+        private static void DrawE()
+        {
+            if (E.IsReady() && Config.Item("drawings.ex").GetValue<bool>())
+            {
+                float lowest = 1600;
+                Vector3 bPos = Vector3.Zero;
+                foreach (Barrel barrel in AllBarrel)
+                {
+                    if (barrel.GetBarrel().Distance(Game.CursorPos) < lowest)
+                    {
+                        bPos = barrel.GetBarrel().Position;
+                        lowest = barrel.GetBarrel().Distance(Game.CursorPos);
+                    }
+                }
+                if (lowest != 1600f)
+                {
+                    Render.Circle.DrawCircle(bPos.ExtendToMaxRange(Game.CursorPos,685),350,Color.ForestGreen);
+                    Drawing.DrawLine(Drawing.WorldToScreen(bPos),Drawing.WorldToScreen(bPos.ExtendToMaxRange(Game.CursorPos,650)),5,Color.ForestGreen);
+                }
             }
         }
 

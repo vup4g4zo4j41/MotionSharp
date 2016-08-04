@@ -23,6 +23,8 @@ namespace e.Motion_Gangplank
             //Key
             Menu keyMenu = new Menu("Key","key");
             keyMenu.AddItem(new MenuItem("key.q", "Semi-Automatic Q").SetValue(new KeyBind(81,KeyBindType.Press)));
+            keyMenu.AddItem(new MenuItem("key.eenabled", "Enable Semi-automatic E").SetValue(false));
+            keyMenu.AddItem(new MenuItem("key.e", "Semi-Automatic E").SetValue(new KeyBind(69, KeyBindType.Press)));
             Menu.AddSubMenu(keyMenu);
            
             //Combo
@@ -56,6 +58,7 @@ namespace e.Motion_Gangplank
             //Drawings
             Menu drawingMenu = new Menu("Drawings","drawings");
             drawingMenu.AddItem(new MenuItem("drawings.warning", "Remember me to Upgrade Ult").SetValue(true));
+            drawingMenu.AddItem(new MenuItem("drawings.ex", "Draw extended E").SetValue(true));
             Menu.AddSubMenu(drawingMenu);
 
             //Cleanse
