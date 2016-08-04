@@ -253,15 +253,15 @@ namespace e.Motion_Gangplank
             if (Config.Item("misc.autoE").GetValue<bool>() && E.IsReady() && E.Instance.Ammo > 1 && !AllBarrel.Any(b => b.GetBarrel().Distance(Player) <= 1200))
             {
                 Obj_AI_Hero target = TargetSelector.GetTarget(1400,TargetSelector.DamageType.Physical);
-                IEnumerable<Vector2> possiblePositions = BarrelPositions.Where(pos => pos.Distance(Player) <= E.Range);
-                if (target != null && possiblePositions.Count() != 0)
+                List<Vector2> possiblePositions = BarrelPositions.Where(pos => pos.Distance(Player) <= E.Range).ToList();
+                if (target != null && possiblePositions.Count != 0)
                 {
                     float minDist = 2000;
                     Vector2 castPos = Vector2.Zero;
                     foreach (var pos in possiblePositions.Where(pos => pos.Distance(target) < minDist))
                     {
                         castPos = new Vector2(pos.X + Rand.Next(0,21) - 10, pos.Y + Rand.Next(0,21) - 10);
-                        minDist = pos.Distance(Player);
+                        minDist = pos.Distance(target);
                     }
                     E.Cast(castPos);
                     
@@ -340,12 +340,16 @@ namespace e.Motion_Gangplank
                     }
                     if (E.IsReady() && !QDelay.Active())
                     {
-                        foreach (var b in AllBarrel)
+                        if (Config.Item("combo.doublee").GetValue<bool>())
                         {
-                            if (b.CanQNow() && b.GetBarrel().Distance(Player) > 615 && b.GetBarrel().Distance(target) < 850)
+                            foreach (var b in AllBarrel)
                             {
-                                Q.Cast(b.GetBarrel());
-                                break;
+                                if (b.CanQNow() && b.GetBarrel().Distance(Player) > 615 &&
+                                    b.GetBarrel().Distance(target) < 850)
+                                {
+                                    Q.Cast(b.GetBarrel());
+                                    break;
+                                }
                             }
                         }
                         if (Config.Item("combo.ex").GetValue<bool>())
@@ -372,7 +376,7 @@ namespace e.Motion_Gangplank
             {
                 List<Barrel> GetValidBarrels = AllBarrel.Where(b => b.CanQNow(400) && b.GetBarrel().Distance(Player) <= 625).ToList();
                 Obj_AI_Hero target = TargetSelector.GetTarget(1400, TargetSelector.DamageType.Physical);
-                if (GetValidBarrels.Any(b => b.GetBarrel().Distance(target) <= 1200))
+                if (target != null && GetValidBarrels.Any(b => b.GetBarrel().Distance(target) <= 1200))
                 {
                     E.Cast(GetValidBarrels.First(b => b.GetBarrel().Distance(target) <= 1200).GetBarrel().Position.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 650));
                     Utility.DelayAction.Add(600, () => QDelay.Delay(GetValidBarrels.First().GetBarrel()));
