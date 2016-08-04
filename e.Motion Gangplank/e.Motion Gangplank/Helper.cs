@@ -27,7 +27,6 @@ namespace e.Motion_Gangplank
                 PredPos = enemy.Position.Extend(PredPos.To3D(), reactionDistance).To2D();
             }
             return true;
-
         }
         public static bool CannotEscape(this Vector3 kegPosition, Vector3 distCalcPosition, Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
         {
@@ -40,6 +39,10 @@ namespace e.Motion_Gangplank
             }
             return false;
         }
-        
+
+        public static Vector3 ExtendToMaxRange(this Vector3 startPosition, Vector3 endPosition, float maxrange)
+        {
+            return startPosition.Extend(endPosition, Math.Min(startPosition.Distance(endPosition), maxrange));
+        }
     }
 }

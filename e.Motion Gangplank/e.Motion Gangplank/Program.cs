@@ -10,6 +10,7 @@ using LeagueSharp;
 using LeagueSharp.Common;
 using LeagueSharp.Common.Data;
 using SharpDX;
+using SharpDX.Direct3D;
 using Color = System.Drawing.Color;
 
 
@@ -17,16 +18,16 @@ namespace e.Motion_Gangplank
 {
     class Program
     {
+
         static void Main(string[] args)
         {
             CustomEvents.Game.OnGameLoad += Game_OnGameLoad;
         }
         #region Declaration
 
-        private static int BarrelTime;
+        //private static int BarrelTime;
         private static Random Rand = new Random();
         private static DelayManager QDelay;
-
         private static Dictionary<string, BuffType> Buffs = new Dictionary<string, BuffType>()
         {
             {"charm",BuffType.Charm},
@@ -74,9 +75,10 @@ namespace e.Motion_Gangplank
             Config Menu = new Config();
             Menu.Initialize();
             #endregion
+
             QDelay = new DelayManager(Q,1500);
             Game.PrintChat("<font color='#bb0000'>e</font>.<font color='#0000cc'>Motion</font> Gangplank loaded");
-            SetBarrelTime();
+            //SetBarrelTime();
              
 
             #region Subscriptions
@@ -85,44 +87,54 @@ namespace e.Motion_Gangplank
             Game.OnUpdate += GameOnUpdate;
             GameObject.OnCreate += OnCreate;
             Obj_AI_Base.OnDoCast += CheckForBarrel;
-            Obj_AI_Base.OnNewPath += OnNewPath;
-            Obj_AI_Base.OnLevelUp += OnLevelUp;
-            
-
-            #endregion
+            Obj_AI_Base.OnProcessSpellCast += OnProcessSpellCast;
+           #endregion
 
         }
 
-        private static void OnLevelUp(Obj_AI_Base sender, EventArgs args)
+        private static void ForceCast(Obj_AI_Hero target, Vector3 barrelPosition)
         {
-            if(sender.IsMe)
-                SetBarrelTime();
+            E.Cast(barrelPosition.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 650));
         }
+
+        private static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        {
+            if (sender.IsMe && args.Slot == SpellSlot.Q && E.IsReady(200) && args.Target.Name == "Barrel")
+            {
+                List<Barrel> barrelsInRange = GetBarrelsInRange(AllBarrel.Find(b => b.GetNetworkID() == args.Target.NetworkId)).ToList();
+                if (Config.Item("combo.triplee").GetValue<bool>() && barrelsInRange.Any())
+                {
+                    //Triple-Logic
+                    foreach (var enemy in HeroManager.Enemies)
+                    {
+                        if (enemy.Position.Distance(args.Target.Position) >= 350 &&
+                            !barrelsInRange.Any(b => b.GetBarrel().Distance(enemy) <= 350) &&
+                             barrelsInRange.Any(b => b.GetBarrel().Distance(enemy) <= 850))
+                        {
+                            Utility.DelayAction.Add(400 + Game.Ping/2, () => ForceCast(enemy,barrelsInRange.First(b => b.GetBarrel().Distance(enemy) >= 350 && b.GetBarrel().Distance(enemy) <= 850).GetBarrel().Position));
+                        }
+                    }
+                }
+                Barrel attackedBarrel = AllBarrel.Find(b => b.GetNetworkID() == args.Target.NetworkId);
+                if (Config.Item("combo.doublee").GetValue<bool>() && attackedBarrel.GetBarrel().Distance(Player) >= 610)
+                {
+                    //Double Logic
+                    foreach (var enemy in HeroManager.Enemies)
+                    {
+                        if (args.Target.Position.Distance(enemy.Position) >= 350 && args.Target.Position.Distance(enemy.Position) <= 850)
+                        {
+                            Utility.DelayAction.Add(200 + Game.Ping / 2, () => ForceCast(enemy,args.Target.Position));
+                        }
+                    }
+                }
+                
+            }
+        }
+
 
         private static void OnDraw(EventArgs args)
         {
             Warning();
-        }
-
-        private static void SetBarrelTime()
-        {
-            if (Player.Level < 7)
-            {
-                BarrelTime = 4;
-            }
-            else if (Player.Level < 13)
-            {
-                BarrelTime = 2;
-            }
-            else
-            {
-                BarrelTime = 1;
-            }
-        }
-        private static void OnNewPath(Obj_AI_Base sender, GameObjectNewPathEventArgs args)
-        {
-            if(sender.IsEnemy && sender is Obj_AI_Hero)
-                Combo(true,(Obj_AI_Hero) sender);
         }
 
         private static void KillSteal()
@@ -172,12 +184,10 @@ namespace e.Motion_Gangplank
                 if (AllBarrel.ElementAt(i).GetBarrel() == null || AllBarrel.ElementAt(i).GetBarrel().Health == 0)
                 {
                     AllBarrel.RemoveAt(i);
-
                     break;
                 }
             }
         }
-        
 
         private static void OnCreate(GameObject sender, EventArgs args)
         {
@@ -244,30 +254,6 @@ namespace e.Motion_Gangplank
                 Drawing.DrawText(200,200,Color.Red,"Don't forget to buy Ultimate Upgrade with Silver Serpents");
             }
         }
-        
-
-        private static void TryE(Barrel barrel, Obj_AI_Hero toIgnore)
-        {
-            if (!E.IsReady() || !Config.Item("misc.trye").GetValue<bool>())
-                return;
-            Vector3 castPos = new Vector3();
-            Vector3 barrelPos = barrel.GetBarrel().Position;
-            if (HeroManager.Enemies.FirstOrDefault(
-                e =>
-                    e != toIgnore 
-                    && !e.IsZombie 
-                    && !e.IsDead 
-                    && e.Distance(barrelPos) < 1200 
-                    && !barrelPos.CannotEscape(barrelPos,e) 
-                    && !GetBarrelsInRange(barrel).Any(b => b.GetBarrel().Position.CannotEscape(barrelPos,e, false, true)) 
-                    && Helper.GetPredPos(e) 
-                    && (castPos = barrelPos.Extend(Helper.PredPos.To3D(), Math.Min(650, Player.Distance(Helper.PredPos.To3D()))))
-                        .CannotEscape(barrelPos,e, false, true)) != null)
-            {
-                E.Cast(castPos);
-                Console.WriteLine("Got Additional Targets, please report that on the Thread in Forum if you see it");
-            }
-        }
 
         private static void Combo(bool extended = false,Obj_AI_Hero sender = null)
         {
@@ -296,36 +282,54 @@ namespace e.Motion_Gangplank
                     {
                         extended = false;
                     }
+
                     foreach (var b in AllBarrel)
                     {
-                        
-                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(b.GetBarrel().Position,target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(b.GetBarrel().Position,target, extended,true))))
+                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(b.GetBarrel().Position, target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(b.GetBarrel().Position, target, extended, true))))
                         {
-                            TryE(b, target);
                             QDelay.Delay(b.GetBarrel());
                             break;
                         }
                     }
-
-                    if (E.IsReady() && !QDelay.Active() && Config.Item("combo.ex").GetValue<bool>())
+                    if (E.IsReady() && !QDelay.Active())
                     {
                         foreach (var b in AllBarrel)
                         {
-                            Vector3 castPos;
-                            castPos =
-                                b.GetBarrel()
-                                    .Position.Extend(Helper.PredPos.To3D(),
-                                        Math.Min(650, Helper.PredPos.To3D().Distance(b.GetBarrel().Position)));
-                            if (b.CanQNow() && castPos.Distance(Player.Position) < 1000 && castPos.CannotEscape(b.GetBarrel().Position, target, extended, true))
+                            if (b.CanQNow() && b.GetBarrel().Distance(Player) > 615 && b.GetBarrel().Distance(target) < 850)
                             {
-                                E.Cast(castPos);
-                                QDelay.Delay(b.GetBarrel());
+                                Q.Cast(b.GetBarrel());
                                 break;
+                            }
+                        }
+                        if (Config.Item("combo.ex").GetValue<bool>())
+                        {
+                            foreach (var b in AllBarrel)
+                            {
+                                var castPos = b.GetBarrel().Position.ExtendToMaxRange(Helper.PredPos.To3D(),650);
+
+                                if (b.CanQNow() && castPos.Distance(Player.Position) < 1000 &&
+                                    castPos.CannotEscape(b.GetBarrel().Position, target, extended, true))
+                                {
+                                    E.Cast(castPos);
+                                    QDelay.Delay(b.GetBarrel());
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-                
+            }
+
+            //Triple - Logic
+            if (Q.IsReady() && E.Instance.Ammo >= 2 && Config.Item("combo.triplee").GetValue<bool>())
+            {
+                List<Barrel> GetValidBarrels = AllBarrel.Where(b => b.CanQNow(400) && b.GetBarrel().Distance(Player) <= 625).ToList();
+                Obj_AI_Hero target = TargetSelector.GetTarget(1400, TargetSelector.DamageType.Physical);
+                if (GetValidBarrels.Any(b => b.GetBarrel().Distance(target) <= 1200))
+                {
+                    E.Cast(GetValidBarrels.First(b => b.GetBarrel().Distance(target) <= 1200).GetBarrel().Position.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 650));
+                    Utility.DelayAction.Add(600, () => QDelay.Delay(GetValidBarrels.First().GetBarrel()));
+                }
             }
 
             if (Config.Item("combo.q").GetValue<bool>() && Q.IsReady())
@@ -355,7 +359,7 @@ namespace e.Motion_Gangplank
 
         private static IEnumerable<Barrel> GetBarrelsInRange (Barrel initalBarrel)
         {
-            return AllBarrel.Where(b => b.GetBarrel().Position.Distance(initalBarrel.GetBarrel().Position) < 650 && b != initalBarrel);
+            return AllBarrel.Where(b => b.GetBarrel().Position.Distance(initalBarrel.GetBarrel().Position) <= 650 && b != initalBarrel);
         }
 
         private static void Lasthit()

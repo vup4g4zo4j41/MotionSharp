@@ -31,6 +31,8 @@ namespace e.Motion_Gangplank
             comboMenu.AddItem(new MenuItem("combo.qe", "Use Q on Barrel").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.e", "Use E").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.ex", "Use E to Extend").SetValue(true));
+            comboMenu.AddItem(new MenuItem("combo.doublee", "Use Double E Combo").SetValue(false).SetTooltip("Only working with low Ping"));
+            comboMenu.AddItem(new MenuItem("combo.triplee", "Use Triple E Combo").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.r", "Use R").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.rmin", "Minimum enemies for R").SetValue(new Slider(3, 2, 5)));
             Menu.AddSubMenu(comboMenu);
