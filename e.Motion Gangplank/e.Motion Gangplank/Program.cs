@@ -36,7 +36,7 @@ namespace e.Motion_Gangplank
             {"blind",BuffType.Blind},
             {"silence",BuffType.Silence},
             {"stun",BuffType.Stun},
-            {"fear",BuffType.Fear},
+            {"fear",BuffType.Flee},
             {"polymorph",BuffType.Polymorph},
             {"snare",BuffType.Snare},
             {"taunt",BuffType.Taunt},
