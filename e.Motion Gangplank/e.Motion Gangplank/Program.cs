@@ -28,6 +28,8 @@ namespace e.Motion_Gangplank
         //private static int BarrelTime;
         private static Random Rand = new Random();
         private static DelayManager QDelay;
+        private static Obj_AI_Hero UltimateTarget;
+        private static bool UltimateToBeUsed;
         private static Dictionary<string, BuffType> Buffs = new Dictionary<string, BuffType>()
         {
             {"charm",BuffType.Charm},
@@ -94,7 +96,7 @@ namespace e.Motion_Gangplank
 
         private static void ForceCast(Obj_AI_Hero target, Vector3 barrelPosition)
         {
-            E.Cast(barrelPosition.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 650));
+            E.Cast(barrelPosition.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 685));
         }
 
         private static void OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -134,13 +136,14 @@ namespace e.Motion_Gangplank
 
         private static void OnDraw(EventArgs args)
         {
+            KillstealDrawing();
             Warning();
             DrawE();
         }
 
         private static void KillSteal()
         {
-            //if (Config.Item("killsteal.q").GetValue<bool>() && Q.IsReady())
+            if (Config.Item("killsteal.q").GetValue<bool>() && Q.IsReady())
             {
                 foreach (var enemy in HeroManager.Enemies)
                 {
@@ -150,7 +153,10 @@ namespace e.Motion_Gangplank
                     }
                 }
             }
-            
+            if (Config.Item("killsteal.r").GetValue<bool>() && Config.Item("key.r").GetValue<KeyBind>().Active && R.IsReady() && UltimateToBeUsed && UltimateTarget != null)
+            {
+                R.Cast(SPrediction.Prediction.GetFastUnitPosition(UltimateTarget,150));
+            }
         }
 
         private static void CheckForBarrel(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
@@ -201,7 +207,6 @@ namespace e.Motion_Gangplank
 
         private static void GameOnUpdate(EventArgs args)
         {
-            
             KillSteal();
             Harass();
             QDelay.CheckEachTick();
@@ -239,7 +244,7 @@ namespace e.Motion_Gangplank
         {
             if (Q.IsReady() && Config.Item("harass.q").GetValue<bool>() && Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(650, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = TargetSelector.GetTarget(685, TargetSelector.DamageType.Physical);
                 if (target != null)
                 {
                     Q.Cast(target);
@@ -287,7 +292,7 @@ namespace e.Motion_Gangplank
                 if (lowest != 1600f)
                 {
                     Render.Circle.DrawCircle(bPos.ExtendToMaxRange(Game.CursorPos,685),350,Color.ForestGreen);
-                    Drawing.DrawLine(Drawing.WorldToScreen(bPos),Drawing.WorldToScreen(bPos.ExtendToMaxRange(Game.CursorPos,650)),5,Color.ForestGreen);
+                    Drawing.DrawLine(Drawing.WorldToScreen(bPos),Drawing.WorldToScreen(bPos.ExtendToMaxRange(Game.CursorPos,685)),5,Color.ForestGreen);
                 }
             }
         }
@@ -302,6 +307,40 @@ namespace e.Motion_Gangplank
             }
         }
 
+        private static void KillstealDrawing()
+        {
+            if (Config.Item("killsteal.r").GetValue<bool>() && R.IsReady())
+            {
+                int minKillWave = 20;
+                UltimateTarget = null;
+                foreach (Obj_AI_Hero enemy in HeroManager.Enemies)
+                {
+                    if (enemy.IsTargetable && !enemy.IsZombie && enemy.IsVisible && !enemy.IsDead)
+                    {
+                        int killWave = 1 + (int)((enemy.Health - (Player.HasBuff("GangplankRUpgrade2")?(R.Instance.Level + 20 + Player.TotalMagicalDamage*0.1)*3:0))/R.GetDamage(enemy));
+                        if (killWave < minKillWave)
+                        {
+                            minKillWave = killWave;
+                            UltimateTarget = enemy;
+                        }
+                    }
+                }
+                if (UltimateTarget != null && minKillWave <= (Player.HasBuff("GangplankRUpgrade1") ? 18 : 12) &&
+                    minKillWave <= Config.Item("killsteal.minwave").GetValue<Slider>().Value)
+                {
+                    UltimateToBeUsed = true;
+                    Drawing.DrawText(200, 260, Color.Tomato,
+                        UltimateTarget.ChampionName + " is killable " +
+                        (minKillWave < 1 ? "only with Death Daughter [R] Upgrade" : "with " + minKillWave + " R Waves"));
+                }
+                else
+                {
+                    UltimateToBeUsed = false;
+                }
+            }
+        }
+
+
         private static void Combo(bool extended = false,Obj_AI_Hero sender = null)
         {
             if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
@@ -309,14 +348,14 @@ namespace e.Motion_Gangplank
                 return;
             }
 
-            if (Config.Item("combo.r").GetValue<bool>())
-            {
-                Obj_AI_Hero RTarget = HeroManager.Enemies.FirstOrDefault(t => t.CountAlliesInRange(660) > 0);
-                if (RTarget != null)
-                {
-                    R.CastIfWillHit(RTarget, Config.Item("combo.rmin").GetValue<Slider>().Value);
-                }
-            }
+            //if (Config.Item("combo.r").GetValue<bool>())
+            //{
+            //    Obj_AI_Hero RTarget = HeroManager.Enemies.FirstOrDefault(t => t.CountAlliesInRange(660) > 0);
+            //    if (RTarget != null)
+            //    {
+            //        R.CastIfWillHit(RTarget, Config.Item("combo.rmin").GetValue<Slider>().Value);
+            //    }
+            //}
 
             if (Config.Menu.Item("combo.qe").GetValue<bool>()  && Q.IsReady())
             {
@@ -356,7 +395,7 @@ namespace e.Motion_Gangplank
                         {
                             foreach (var b in AllBarrel)
                             {
-                                var castPos = b.GetBarrel().Position.ExtendToMaxRange(Helper.PredPos.To3D(),650);
+                                var castPos = b.GetBarrel().Position.ExtendToMaxRange(Helper.PredPos.To3D(),685);
 
                                 if (b.CanQNow() && castPos.Distance(Player.Position) < 1000 &&
                                     castPos.CannotEscape(b.GetBarrel().Position, target, extended, true))
@@ -375,10 +414,10 @@ namespace e.Motion_Gangplank
             if (Q.IsReady() && E.Instance.Ammo >= 2 && Config.Item("combo.triplee").GetValue<bool>())
             {
                 List<Barrel> GetValidBarrels = AllBarrel.Where(b => b.CanQNow(400) && b.GetBarrel().Distance(Player) <= 625).ToList();
-                Obj_AI_Hero target = TargetSelector.GetTarget(1400, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = TargetSelector.GetTarget(1200, TargetSelector.DamageType.Physical);
                 if (target != null && GetValidBarrels.Any(b => b.GetBarrel().Distance(target) <= 1200))
                 {
-                    E.Cast(GetValidBarrels.First(b => b.GetBarrel().Distance(target) <= 1200).GetBarrel().Position.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 650));
+                    E.Cast(GetValidBarrels.First(b => b.GetBarrel().Distance(target) <= 1200).GetBarrel().Position.ExtendToMaxRange(Player.Position.ExtendToMaxRange(target.Position, 980), 685));
                     Utility.DelayAction.Add(600, () => QDelay.Delay(GetValidBarrels.First().GetBarrel()));
                 }
             }
@@ -410,12 +449,12 @@ namespace e.Motion_Gangplank
 
         private static IEnumerable<Barrel> GetBarrelsInRange (Barrel initalBarrel)
         {
-            return AllBarrel.Where(b => b.GetBarrel().Position.Distance(initalBarrel.GetBarrel().Position) <= 650 && b != initalBarrel);
+            return AllBarrel.Where(b => b.GetBarrel().Position.Distance(initalBarrel.GetBarrel().Position) <= 685 && b != initalBarrel);
         }
 
         private static void Lasthit()
         {
-            if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit)
+            if (Config.Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.LastHit || Player.ManaPercent <= Config.Item("lasthit.mana").GetValue<Slider>().Value)
             {
                 return;
             }

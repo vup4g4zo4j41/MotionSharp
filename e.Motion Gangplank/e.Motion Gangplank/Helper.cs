@@ -20,8 +20,8 @@ namespace e.Motion_Gangplank
 
         public static bool GetPredPos(Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
         {
-            PredPos = SPrediction.Prediction.GetFastUnitPosition(enemy, Config.Menu.Item("misc.reactionTime").GetValue<Slider>().Value);
-            float reactionDistance = Config.Menu.Item("misc.reactionTime").GetValue<Slider>().Value  +  (additionalReactionTime? Config.Menu.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) * enemy.MoveSpeed*0.001f;
+            PredPos = SPrediction.Prediction.GetFastUnitPosition(enemy, Config.Menu.Item("misc.enemyReactionTime").GetValue<Slider>().Value);
+            float reactionDistance = Config.Menu.Item("misc.enemyReactionTime").GetValue<Slider>().Value  +  (additionalReactionTime? Config.Menu.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) * enemy.MoveSpeed*0.001f;
             if (PredPos.Distance(enemy) > reactionDistance)
             {
                 PredPos = enemy.Position.Extend(PredPos.To3D(), reactionDistance).To2D();
@@ -31,7 +31,7 @@ namespace e.Motion_Gangplank
         public static bool CannotEscape(this Vector3 kegPosition, Vector3 distCalcPosition, Obj_AI_Hero enemy, bool additionalReactionTime = false, bool additionalBarrelTime = false)
         {
             GetPredPos(enemy, additionalReactionTime);
-            if (PredPos.Distance(kegPosition) < 400 - enemy.MoveSpeed*(GetQTime(kegPosition)+(additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f)
+            if (enemy.Position.Distance(kegPosition) <= 325 && PredPos.Distance(kegPosition) < 325 - enemy.MoveSpeed*(GetQTime(kegPosition)+(additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.enemyReactionTime").GetValue<Slider>().Value) * 0.00095f)
             {
                 //Game.PrintChat("Distance:" + PredPos.Distance(kegPosition));
                 //Game.PrintChat("Max Distance:" + (400 - enemy.MoveSpeed * (GetQTime(kegPosition) + (additionalBarrelTime ? 400 : 0) - (additionalReactionTime ? Config.Item("misc.additionalReactionTime").GetValue<Slider>().Value : 0) - Config.Item("misc.reactionTime").GetValue<Slider>().Value) * 0.00095f));

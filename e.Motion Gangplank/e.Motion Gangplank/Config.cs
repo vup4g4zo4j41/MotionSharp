@@ -25,6 +25,7 @@ namespace e.Motion_Gangplank
             keyMenu.AddItem(new MenuItem("key.q", "Semi-Automatic Q").SetValue(new KeyBind(81,KeyBindType.Press)));
             keyMenu.AddItem(new MenuItem("key.eenabled", "Enable Semi-automatic E").SetValue(false));
             keyMenu.AddItem(new MenuItem("key.e", "Semi-Automatic E").SetValue(new KeyBind(69, KeyBindType.Press)));
+            keyMenu.AddItem(new MenuItem("key.r", "Semi-Automatic R").SetValue(new KeyBind(82, KeyBindType.Press)));
             Menu.AddSubMenu(keyMenu);
            
             //Combo
@@ -35,7 +36,7 @@ namespace e.Motion_Gangplank
             comboMenu.AddItem(new MenuItem("combo.ex", "Use E to Extend").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.doublee", "Use Double E Combo").SetValue(false).SetTooltip("Only working with low Ping"));
             comboMenu.AddItem(new MenuItem("combo.triplee", "Use Triple E Combo").SetValue(true));
-            comboMenu.AddItem(new MenuItem("combo.r", "Use R").SetValue(true));
+            comboMenu.AddItem(new MenuItem("combo.r", "Use R").SetTooltip("Will be fixed soon"));
             comboMenu.AddItem(new MenuItem("combo.rmin", "Minimum enemies for R").SetValue(new Slider(3, 2, 5)));
             Menu.AddSubMenu(comboMenu);
 
@@ -48,11 +49,14 @@ namespace e.Motion_Gangplank
             Menu lasthitMenu = new Menu("Lasthit", "lasthit");
             lasthitMenu.AddItem(new MenuItem("lasthit.q", "Use Q").SetValue(true));
             lasthitMenu.AddItem(new MenuItem("lasthit.qe", "Use Q on Barrels").SetValue(true));
+            lasthitMenu.AddItem(new MenuItem("lasthit.mana", "Minimum Mana %").SetValue(new Slider(30)));
             Menu.AddSubMenu(lasthitMenu);
 
             //Killsteal
             Menu killstealMenu = new Menu("Killsteal","killsteal");
-            killstealMenu.AddItem(new MenuItem("killsteal.q ", "Use Q").SetValue(true));
+            killstealMenu.AddItem(new MenuItem("killsteal.q", "Use Q").SetValue(true));
+            killstealMenu.AddItem(new MenuItem("killsteal.r", "Semi-Automatic R").SetValue(true));
+            killstealMenu.AddItem(new MenuItem("killsteal.minwave", "Minimum Waves for R").SetValue(new Slider(6, 1, 18)));
             Menu.AddSubMenu(killstealMenu);
 
             //Drawings
@@ -88,7 +92,7 @@ namespace e.Motion_Gangplank
             //Misc
             Menu miscMenu = new Menu("Miscellanious", "misc");
             miscMenu.AddItem(new MenuItem("misc.additionalServerTick", "Additional Server Tick").SetTooltip("Don't change that if you don't know what it is").SetValue(new Slider(30)));
-            miscMenu.AddItem(new MenuItem("misc.reactionTime", "enemy Reaction Time").SetTooltip("Higher = Possible not to hit enemy with Barrel, Lower = Possible to use additional Barrels").SetValue(new Slider(100,0,500)));
+            miscMenu.AddItem(new MenuItem("misc.enemyReactionTime", "enemy Reaction Time").SetTooltip("Higher = Possible not to hit enemy with Barrel, Lower = Possible to use additional Barrels").SetValue(new Slider(300,0,500)));
             miscMenu.AddItem(new MenuItem("misc.additionalReactionTime", "Additional Reaction Time on Direction Change").SetTooltip("For Calculation when enemy will change direction").SetValue(new Slider(50, 0, 200)));
             miscMenu.AddItem(new MenuItem("misc.trye", "Always extend with E").SetValue(true).SetTooltip("Will always try to Extend with E to get additional Champions"));
             miscMenu.AddItem(new MenuItem("misc.autoE", "Place Barrels automatically").SetTooltip("Will automatically place Barrels in Bushes if no other Barrels exist").SetValue(true));
