@@ -8,7 +8,6 @@ using System.Text;
 using System.Threading.Tasks;
 using LeagueSharp;
 using LeagueSharp.Common;
-using LeagueSharp.Common.Data;
 using SharpDX;
 using SharpDX.Direct3D;
 using Color = System.Drawing.Color;
@@ -180,6 +179,7 @@ namespace e.Motion_Gangplank
                     }
                 }
             }
+            
         }
 
         private static void CleanBarrel()
@@ -244,7 +244,7 @@ namespace e.Motion_Gangplank
         {
             if (Q.IsReady() && Config.Item("harass.q").GetValue<bool>() && Config.Orbwalker.ActiveMode == Orbwalking.OrbwalkingMode.Mixed)
             {
-                Obj_AI_Hero target = TargetSelector.GetTarget(685, TargetSelector.DamageType.Physical);
+                Obj_AI_Hero target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
                 if (target != null)
                 {
                     Q.Cast(target);
@@ -356,6 +356,20 @@ namespace e.Motion_Gangplank
             //        R.CastIfWillHit(RTarget, Config.Item("combo.rmin").GetValue<Slider>().Value);
             //    }
             //}
+            if(Config.Menu.Item("combo.aae").GetValue<bool>() && Orbwalking.CanAttack())
+            {
+                List<Barrel> barrelsInAutoAttackRange = AllBarrel.Where(b => b.GetBarrel().Distance(Player) <= Orbwalking.GetRealAutoAttackRange(Player) && b.CanAANow()).ToList();
+                if (barrelsInAutoAttackRange.Any() && (!Player.GetEnemiesInRange(Orbwalking.GetRealAutoAttackRange(Player)).Any() || !Player.Buffs.Any(buff => buff.Name == "gangplankpassiveattack")))
+                {
+                    foreach(Barrel b in barrelsInAutoAttackRange)
+                    {
+                        if(HeroManager.Enemies.Any(enemy => b.GetBarrel().Position.CannotEscapeFromAA(enemy) || GetBarrelsInRange(b).Any(bar => bar.GetBarrel().Position.CannotEscapeFromAA(enemy))))
+                        {
+                            Config.Orbwalker.ForceTarget(b.GetBarrel());
+                        }                                
+                    }
+                }
+            }
 
             if (Config.Menu.Item("combo.qe").GetValue<bool>()  && Q.IsReady())
             {
@@ -371,7 +385,7 @@ namespace e.Motion_Gangplank
 
                     foreach (var b in AllBarrel)
                     {
-                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(b.GetBarrel().Position, target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(b.GetBarrel().Position, target, extended, true))))
+                        if (b.CanQNow() && (b.GetBarrel().Position.CannotEscape(target, extended) || GetBarrelsInRange(b).Any(bb => bb.GetBarrel().Position.CannotEscape(target, extended, true))))
                         {
                             QDelay.Delay(b.GetBarrel());
                             break;
@@ -398,7 +412,7 @@ namespace e.Motion_Gangplank
                                 var castPos = b.GetBarrel().Position.ExtendToMaxRange(Helper.PredPos.To3D(),685);
 
                                 if (b.CanQNow() && castPos.Distance(Player.Position) < 1000 &&
-                                    castPos.CannotEscape(b.GetBarrel().Position, target, extended, true))
+                                    castPos.CannotEscape(target, extended, true))
                                 {
                                     E.Cast(castPos);
                                     QDelay.Delay(b.GetBarrel());

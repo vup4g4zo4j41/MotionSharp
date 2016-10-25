@@ -22,6 +22,12 @@ namespace e.Motion_Gangplank
         {
             return ObjectManager.GetUnitByNetworkId<Obj_AI_Minion>(BarrelObjectNetworkID);
         }
+        public bool CanAANow()
+        {
+            //Console.WriteLine();
+            return Utils.TickCount >= BarrelAttackTick - Program.Player.AttackCastDelay * 1000;
+        }
+
         public bool CanQNow(int delay = 0)
         {
             if (Program.Player.Distance(GetBarrel().Position)<=625 && Helper.GetQTime(GetBarrel().Position) + delay + Utils.TickCount >= BarrelAttackTick + Config.Menu.Item("misc.additionalServerTick").GetValue<Slider>().Value)
