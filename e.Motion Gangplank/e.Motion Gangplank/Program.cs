@@ -135,9 +135,22 @@ namespace e.Motion_Gangplank
 
         private static void OnDraw(EventArgs args)
         {
+            DrawRanges();
             KillstealDrawing();
             Warning();
             DrawE();
+        }
+
+        private static void DrawRanges()
+        {
+            if (Config.Item("drawings.q").GetValue<bool>() && Q.IsReady())
+            {
+                Render.Circle.DrawCircle(Player.Position, Q.Range, Color.IndianRed);
+            }
+            if (Config.Item("drawings.e").GetValue<bool>() && E.IsReady())
+            {
+                Render.Circle.DrawCircle(Player.Position, E.Range, Color.IndianRed);
+            }
         }
 
         private static void KillSteal()
@@ -220,22 +233,46 @@ namespace e.Motion_Gangplank
 
         private static void SemiAutomaticE()
         {
-            if (E.IsReady() && Config.Item("key.eenabled").GetValue<bool>() &&
-                Config.Item("key.e").GetValue<KeyBind>().Active)
+            if (E.IsReady() && Config.Item("key.e").GetValue<KeyBind>().Active)
             {
-                float lowest = 1600;
-                Vector3 bPos = Vector3.Zero;
-                foreach (Barrel barrel in AllBarrel)
+                if(Config.Item("key.emode").GetValue<StringList>().SelectedIndex == 1)
                 {
-                    if (barrel.GetBarrel().Distance(Game.CursorPos) < lowest)
+                    float lowest = 1600;
+                    Vector3 bPos = Vector3.Zero;
+                    foreach (Barrel barrel in AllBarrel)
                     {
-                        bPos = barrel.GetBarrel().Position;
-                        lowest = barrel.GetBarrel().Distance(Game.CursorPos);
+                        if (barrel.GetBarrel().Distance(Game.CursorPos) < lowest)
+                        {
+                            bPos = barrel.GetBarrel().Position;
+                            lowest = barrel.GetBarrel().Distance(Game.CursorPos);
+                        }
+                    }
+                    if (lowest != 1600f)
+                    {
+                        E.Cast(bPos.Extend(Game.CursorPos, Math.Min(685, lowest)));
                     }
                 }
-                if (lowest != 1600f)
+                else if(Config.Item("key.emode").GetValue<StringList>().SelectedIndex == 2 && Q.IsReady())
                 {
-                    E.Cast(bPos.Extend(Game.CursorPos, Math.Min(685, lowest)));
+                    IEnumerable<Barrel> toExplode = AllBarrel.Where(b => b.CanQNow() && b.GetBarrel().Distance(Player) <= Q.Range);
+                    if (toExplode.Any())
+                    {
+                        float lowest = 1600;
+                        Barrel bar = null;
+                        foreach (Barrel barrel in AllBarrel)
+                        {
+                            if (barrel.GetBarrel().Distance(Game.CursorPos) < lowest)
+                            {
+                                bar = barrel;
+                                lowest = barrel.GetBarrel().Distance(Game.CursorPos);
+                            }
+                        }
+                        if(bar != null)
+                        {
+                            E.Cast(bar.GetBarrel().Position.Extend(Game.CursorPos, Math.Min(685, lowest)));
+                            QDelay.Delay(bar.GetBarrel());
+                        }
+                    }
                 }
             }
         }
