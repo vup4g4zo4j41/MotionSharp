@@ -153,12 +153,18 @@ namespace e.Motion_Katarina
                 if(Player.Distance(ePositon) <= E.Range)
                 {
                     E.Cast(ePositon);
+                    return;
                 }
                 ePositon = Player.Position.Extend(ePositon, E.Range);
                 if(ePositon.Distance(eDagger.GetPosition()) <= 140 && ePositon.Distance(target.Position) < 200)
                 {
                     E.Cast(ePositon);
+                    return;
                 }
+            }
+            if(Config.GetBoolValue("combo.ealways"))
+            {
+                E.Cast(target);
             }
         }
 

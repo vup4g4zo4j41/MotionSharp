@@ -27,6 +27,7 @@ namespace e.Motion_Katarina
             comboMenu.AddItem(new MenuItem("combo.q", "Use Q").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.w", "Use W").SetValue(true));
             comboMenu.AddItem(new MenuItem("combo.e", "Use E").SetValue(true));
+            comboMenu.AddItem(new MenuItem("combo.ealways", "Always use E").SetValue(false));
             comboMenu.AddItem(new MenuItem("combo.r", "Use R").SetValue(true));
 
             //Killsteal-Menu
